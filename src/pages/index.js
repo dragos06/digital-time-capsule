@@ -1,114 +1,103 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
+import Header from "@/components/Header";
+import CapsulesGrid from "@/components/CapsulesGrid";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const timeCapsules = [
+  {
+    id: 1,
+    title: "High School Memories",
+    date: "2024-05-10",
+    status: "Unlocked",
+  },
+  { id: 2, title: "First Web Project", date: "2030-02-15", status: "Locked" },
+  {
+    id: 3,
+    title: "Some title",
+    date: "2050-12-25",
+    status: "Locked",
+  },
+  { id: 4, title: "College Graduation", date: "2028-06-30", status: "Locked" },
+  {
+    id: 5,
+    title: "First Car Purchase",
+    date: "2032-04-18",
+    status: "Unlocked",
+  },
+  { id: 6, title: "Bucket List Goals", date: "2035-07-20", status: "Locked" },
+  { id: 7, title: "Trip to Japan", date: "2031-11-05", status: "Locked" },
+  { id: 8, title: "Dream House Plans", date: "2040-09-15", status: "Unlocked" },
+  { id: 9, title: "My First Business", date: "2033-03-22", status: "Locked" },
+  {
+    id: 10,
+    title: "Wedding Anniversary",
+    date: "2038-12-01",
+    status: "Unlocked",
+  },
+  {
+    id: 11,
+    title: "Message to Future Me",
+    date: "2045-01-10",
+    status: "Locked",
+  },
+  {
+    id: 12,
+    title: "Best Friends Memories",
+    date: "2029-08-05",
+    status: "Unlocked",
+  },
+  {
+    id: 13,
+    title: "Life Lessons Compilation",
+    date: "2036-06-12",
+    status: "Locked",
+  },
+  { id: 14, title: "Hobby Evolution", date: "2034-02-28", status: "Unlocked" },
+  {
+    id: 15,
+    title: "Family Photos Archive",
+    date: "2042-10-10",
+    status: "Locked",
+  },
+  {
+    id: 16,
+    title: "First Day at Work",
+    date: "2030-09-01",
+    status: "Unlocked",
+  },
+  {
+    id: 17,
+    title: "Gaming Achievements",
+    date: "2037-05-20",
+    status: "Locked",
+  },
+  {
+    id: 18,
+    title: "Favorite Songs Playlist",
+    date: "2039-03-25",
+    status: "Unlocked",
+  },
+  {
+    id: 19,
+    title: "My Childhood Stories",
+    date: "2041-07-08",
+    status: "Locked",
+  },
+  { id: 20, title: "Secret Message", date: "2055-12-31", status: "Locked" },
+];
 
 export default function Home() {
   return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/pages/index.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div class="min-h-screen bg-gray-100">
+      <Header />
+      <CapsulesGrid capsules={timeCapsules} />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      <div class="flex justify-center mb-4">
+        <Link href="/create">
+          <button class="fixed bottom-6 right-6 px-4 py-2 text-xl font-bold bg-[#D9D9D9] text-black font-courier rounded-4xl shadow-lg">
+            + Create New Capsule
+          </button>
+        </Link>
+      </div>
     </div>
   );
 }

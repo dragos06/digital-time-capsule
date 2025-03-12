@@ -1,6 +1,8 @@
+import { useState } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import CapsulesGrid from "@/components/CapsulesGrid";
+import Pagination from "@/components/Pagination";
 
 const timeCapsules = [
   {
@@ -86,14 +88,35 @@ const timeCapsules = [
 ];
 
 export default function Home() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
+
+  //calculate total number of pages
+  const totalPages = Math.ceil(timeCapsules.length / itemsPerPage);
+
+  //calculate index of last item
+  const indexOfLastItem = currentPage * itemsPerPage;
+
+  //calculate index of first item
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+
+  //find capsules for current page
+  const currentCapsules = timeCapsules.slice(indexOfFirstItem, indexOfLastItem);
+
   return (
-    <div class="min-h-screen bg-gray-100">
+    <div class="min-h-screen bg-gray-100 font-courier">
       <Header />
-      <CapsulesGrid capsules={timeCapsules} />
+      <CapsulesGrid capsules={currentCapsules} />
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        setCurrentPage={setCurrentPage}
+      />
 
       <div class="flex justify-center mb-4">
         <Link href="/create">
-          <button class="fixed bottom-6 right-6 px-4 py-2 text-xl font-bold bg-[#D9D9D9] text-black font-courier rounded-4xl shadow-lg">
+          <button class="fixed bottom-6 right-6 px-4 py-2 text-xl font-bold bg-[#D9D9D9] text-black rounded-4xl shadow-lg">
             + Create New Capsule
           </button>
         </Link>

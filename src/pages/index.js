@@ -3,6 +3,8 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import CapsulesGrid from "@/components/CapsulesGrid";
 import Pagination from "@/components/Pagination";
+import SearchBar from "@/components/SearchBar";
+import CreateButton from "@/components/CreateButton";
 
 const timeCapsules = [
   {
@@ -89,10 +91,19 @@ const timeCapsules = [
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const itemsPerPage = 9;
 
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+  };
+
+  const filteredCapsules = timeCapsules.filter((capsule) =>
+    capsule.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   //calculate total number of pages
-  const totalPages = Math.ceil(timeCapsules.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredCapsules.length / itemsPerPage);
 
   //calculate index of last item
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -101,25 +112,26 @@ export default function Home() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
 
   //find capsules for current page
-  const currentCapsules = timeCapsules.slice(indexOfFirstItem, indexOfLastItem);
+  const currentCapsules = filteredCapsules.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
 
   return (
     <div class="min-h-screen bg-gray-100 font-courier">
       <Header />
+
+      <SearchBar onSearch={handleSearch} />
+
       <CapsulesGrid capsules={currentCapsules} />
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        setCurrentPage={setCurrentPage}
-      />
-
-      <div class="flex justify-center mb-4">
-        <Link href="/create">
-          <button class="fixed bottom-6 right-6 px-4 py-2 text-xl font-bold bg-[#D9D9D9] text-black rounded-4xl shadow-lg">
-            + Create New Capsule
-          </button>
-        </Link>
+      <div class="fixed bottom-3 left-3 right-3 flex justify-between">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          setCurrentPage={setCurrentPage}
+        />
+        <CreateButton />
       </div>
     </div>
   );

@@ -4,21 +4,21 @@ export default function Pagination({
   setCurrentPage,
 }) {
   return (
-    <div class="fixed bottom-2 left-2 justify-center items-center mt-6 space-x-4">
+    <div class="flex justify-start items-center bg-gray-100 rounded-4xl drop-shadow-lg">
       {/* Previous Button */}
       <button
         onClick={() => setCurrentPage(currentPage - 1)}
         disabled={currentPage === 1}
         class={
-          "px-4 py-2 font-bold text-black rounded-lg " +
+          "text-sm px-4 py-2 font-bold text-black rounded-lg " +
           (currentPage === 1 ? "text-gray-500" : "cursor-pointer  text-black")
         }
       >
-        {"<--"} Previous
+        {"<--"}Previous
       </button>
 
       {/* Page Counter */}
-      <span class="text-lg font-semibold text-black">
+      <span class="text-base font-semibold text-black">
         Page {currentPage} of {totalPages}
       </span>
 
@@ -27,11 +27,11 @@ export default function Pagination({
         onClick={() => setCurrentPage(currentPage + 1)}
         disabled={currentPage === totalPages}
         class={
-          "px-4 py-2 font-bold text-black rounded-lg " +
+          "text-sm px-4 py-2 font-bold text-black rounded-lg " +
           (currentPage === totalPages ? "text-gray-500" : "cursor-pointer  text-black")
         }
       >
-        Next {"-->"}
+        Next{"-->"}
       </button>
     </div>
   );

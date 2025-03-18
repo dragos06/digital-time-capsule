@@ -1,137 +1,127 @@
 import { useState } from "react";
-import Link from "next/link";
 import Header from "@/components/Header";
 import CapsulesGrid from "@/components/CapsulesGrid";
 import Pagination from "@/components/Pagination";
 import SearchBar from "@/components/SearchBar";
 import CreateButton from "@/components/CreateButton";
-
-const timeCapsules = [
-  {
-    id: 1,
-    title: "High School Memories",
-    date: "2024-05-10",
-    status: "Unlocked",
-  },
-  { id: 2, title: "First Web Project", date: "2030-02-15", status: "Locked" },
-  {
-    id: 3,
-    title: "Some title",
-    date: "2050-12-25",
-    status: "Locked",
-  },
-  { id: 4, title: "College Graduation", date: "2028-06-30", status: "Locked" },
-  {
-    id: 5,
-    title: "First Car Purchase",
-    date: "2032-04-18",
-    status: "Unlocked",
-  },
-  { id: 6, title: "Bucket List Goals", date: "2035-07-20", status: "Locked" },
-  { id: 7, title: "Trip to Japan", date: "2031-11-05", status: "Locked" },
-  { id: 8, title: "Dream House Plans", date: "2040-09-15", status: "Unlocked" },
-  { id: 9, title: "My First Business", date: "2033-03-22", status: "Locked" },
-  {
-    id: 10,
-    title: "Wedding Anniversary",
-    date: "2038-12-01",
-    status: "Unlocked",
-  },
-  {
-    id: 11,
-    title: "Message to Future Me",
-    date: "2045-01-10",
-    status: "Locked",
-  },
-  {
-    id: 12,
-    title: "Best Friends Memories",
-    date: "2029-08-05",
-    status: "Unlocked",
-  },
-  {
-    id: 13,
-    title: "Life Lessons Compilation",
-    date: "2036-06-12",
-    status: "Locked",
-  },
-  { id: 14, title: "Hobby Evolution", date: "2034-02-28", status: "Unlocked" },
-  {
-    id: 15,
-    title: "Family Photos Archive",
-    date: "2042-10-10",
-    status: "Locked",
-  },
-  {
-    id: 16,
-    title: "First Day at Work",
-    date: "2030-09-01",
-    status: "Unlocked",
-  },
-  {
-    id: 17,
-    title: "Gaming Achievements",
-    date: "2037-05-20",
-    status: "Locked",
-  },
-  {
-    id: 18,
-    title: "Favorite Songs Playlist",
-    date: "2039-03-25",
-    status: "Unlocked",
-  },
-  {
-    id: 19,
-    title: "My Childhood Stories",
-    date: "2041-07-08",
-    status: "Locked",
-  },
-  { id: 20, title: "Secret Message", date: "2055-12-31", status: "Locked" },
-];
+import { useEffect } from "react";
+import initialTimeCapsules from "@/data/Capsules";
 
 export default function Home() {
+  const [timeCapsules, setTimeCapsules] = useState(initialTimeCapsules);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [filterCase, setFilterCase] = useState("All");
+
   const itemsPerPage = 9;
+
+  const syncInitialTimeCapsules = (newCapsules) => {
+    initialTimeCapsules.length = 0; // Clear the original data
+    initialTimeCapsules.push(...newCapsules); // Add the updated data
+  };
+
+  useEffect(() => {
+    const currentDate = new Date();
+    const updatedCapsules = timeCapsules.map((capsule) => {
+      if (new Date(capsule.date) < currentDate && capsule.status === "Locked") {
+        return { ...capsule, status: "Unlocked" };
+      }
+      return capsule;
+    });
+    setTimeCapsules(updatedCapsules);
+    syncInitialTimeCapsules(updatedCapsules);
+    // Sync changes to initialTimeCapsules
+  }, []);
 
   const handleSearch = (term) => {
     setSearchTerm(term);
+  };
+
+  const handleSort = () => {
+    setSortOrder((prevOrder) => {
+      const newOrder = prevOrder === "asc" ? "desc" : "asc";
+      setTimeCapsules((prevCapsules) =>
+        [...prevCapsules].sort((a, b) =>
+          newOrder === "asc"
+            ? new Date(a.date) - new Date(b.date)
+            : new Date(b.date) - new Date(a.date)
+        )
+      );
+      return newOrder;
+    });
+  };
+
+  const handleFilter = () => {
+    setFilterCase((prevFilter) => {
+      const newFilter =
+        prevFilter === "Unlocked" ? "Locked" :
+        prevFilter === "Locked" ? "All" : "Unlocked";
+
+      const filteredCapsules = newFilter === "All"
+        ? initialTimeCapsules
+        : initialTimeCapsules.filter((capsule) => capsule.status === newFilter);
+
+      setTimeCapsules(filteredCapsules);
+      return newFilter;
+    });
+  };
+
+  const handleDeleteCapsule = (id) => {
+    const updatedCapsules = timeCapsules.filter((capsule) => capsule.id !== id);
+    setTimeCapsules(updatedCapsules);
+    syncInitialTimeCapsules(updatedCapsules); // Sync after deleting
+  };
+
+  const handleAddCapsule = (title, date, description) => {
+    if (!title.trim() || !date.trim() || !description.trim()) return;
+
+    const newCapsule = {
+      id: initialTimeCapsules.length + 1, // Ensure unique IDs
+      title,
+      date,
+      description,
+      status: "Locked",
+    };
+
+    const updatedCapsules = [...timeCapsules, newCapsule];
+    setTimeCapsules(updatedCapsules);
+    syncInitialTimeCapsules(updatedCapsules); // Sync after adding
   };
 
   const filteredCapsules = timeCapsules.filter((capsule) =>
     capsule.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  //calculate total number of pages
   const totalPages = Math.ceil(filteredCapsules.length / itemsPerPage);
-
-  //calculate index of last item
   const indexOfLastItem = currentPage * itemsPerPage;
-
-  //calculate index of first item
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-
-  //find capsules for current page
   const currentCapsules = filteredCapsules.slice(
     indexOfFirstItem,
     indexOfLastItem
   );
 
   return (
-    <div class="min-h-screen bg-gray-100 font-courier">
+    <div className="min-h-screen bg-gray-100 font-courier">
       <Header />
 
-      <SearchBar onSearch={handleSearch} />
+      <SearchBar
+        onSearch={handleSearch}
+        onSort={handleSort}
+        sortOrder={sortOrder}
+        onFilter={handleFilter}
+        filterCase={filterCase}
+      />
 
-      <CapsulesGrid capsules={currentCapsules} />
+      <CapsulesGrid capsules={currentCapsules} onDelete={handleDeleteCapsule} />
 
-      <div class="fixed bottom-3 left-3 right-3 flex justify-between">
+      <div className="fixed bottom-3 left-3 right-3 flex justify-between">
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
           setCurrentPage={setCurrentPage}
         />
-        <CreateButton />
+        <CreateButton onAdd={handleAddCapsule} />
       </div>
     </div>
   );

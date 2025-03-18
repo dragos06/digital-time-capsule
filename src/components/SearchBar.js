@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function SearchBar({onSearch}) {
+export default function SearchBar({ onSearch, onSort, sortOrder, onFilter, filterCase }) {
   const [searchTerm, setSearchTerm] = useState("");
   const handleChange = (event) => {
     setSearchTerm(event.target.value);
@@ -8,14 +8,32 @@ export default function SearchBar({onSearch}) {
   };
 
   return (
-    <div class="flex justify-end px-5 py-4">
+    <div className="flex justify-end px-5 py-4">
+      {/* Search Input */}
       <input
         type="text"
         value={searchTerm}
         onChange={handleChange}
         placeholder="Search capsules..."
-        class="px-4 bg-[#D9D9D9] rounded-4xl text-black drop-shadow-lg"
+        className="px-4 py-2 bg-[#D9D9D9] rounded-4xl text-black drop-shadow-lg mx-2"
       />
+
+      {/* Sort Button */}
+      <button
+        onClick={onSort}
+        className="px-4 py-2 bg-[#D9D9D9] rounded-4xl text-black drop-shadow-lg mx-2"
+      >
+        Sort {sortOrder === "asc" ? "▼" : "▲"}
+      </button>
+
+      {/* Filter Button */}
+      <button
+        onClick={onFilter}
+        aria-label="filterButton"
+        className="px-4 py-2 bg-[#D9D9D9] rounded-4xl text-black drop-shadow-lg"
+      >
+        Show: {filterCase}
+      </button>
     </div>
   );
 }

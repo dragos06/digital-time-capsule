@@ -16,6 +16,7 @@ export default function SearchBar({ onSearch, onSort, sortOrder, onFilter, filte
       {/* Search Input */}
       <input
         type="text"
+        aria-label="searchInput"
         value={searchTerm}
         onChange={handleChange}
         placeholder="Search capsules..."

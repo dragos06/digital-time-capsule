@@ -1,11 +1,17 @@
-import { useState } from "react";
-import Header from "@/components/Header";
-import CapsulesGrid from "@/components/CapsulesGrid";
-import Pagination from "@/components/Pagination";
-import SearchBar from "@/components/SearchBar";
-import CreateButton from "@/components/CreateButton";
-import { useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import Header from "@/components/UI/Header";
+import CapsulesGrid from "@/components/Capsule/CapsulesGrid";
+import Pagination from "@/components/UI/Pagination";
+import SearchBar from "@/components/UI/SearchBar";
+import CreateButton from "@/components/UI/CreateButton";
 import initialTimeCapsules from "@/data/Capsules";
+import { handleAddCapsule } from "@/utils/handleAddCapsule";
+import { handleDeleteCapsule } from "@/utils/handleDeleteCapsule";
+import { handleFilter } from "@/utils/handleFilter";
+import { handleSort } from "@/utils/handleSort";
+import { updateCapsulesStatus } from "@/utils/updateCapsulesStatus";
+import CapsulesChart from "@/components/UI/CapsuleChart";
+import { faker } from "@faker-js/faker";
 
 export default function Home() {
   const [timeCapsules, setTimeCapsules] = useState(initialTimeCapsules);
@@ -13,80 +19,97 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
   const [filterCase, setFilterCase] = useState("All");
+  const [itemsPerPage, setItemsPerPage] = useState(9);
+  const [isAddingCapsules, setIsAddingCapsules] = useState(false); // Track whether the thread is running
+  const [intervalId, setIntervalId] = useState(null); // Store the interval ID
 
-  const itemsPerPage = 9;
+  // const chartData = useMemo(() => {
+  //   const unlockedCount = timeCapsules.filter(
+  //     (capsule) => capsule.status === "Unlocked"
+  //   ).length;
+  //   const lockedCount = timeCapsules.filter(
+  //     (capsule) => capsule.status === "Locked"
+  //   ).length;
 
-  const syncInitialTimeCapsules = (newCapsules) => {
-    initialTimeCapsules.length = 0; // Clear the original data
-    initialTimeCapsules.push(...newCapsules); // Add the updated data
-  };
+  //   return {
+  //     labels: ["Unlocked", "Locked"],
+  //     datasets: [
+  //       {
+  //         label: "Capsules",
+  //         data: [unlockedCount, lockedCount],
+  //         backgroundColor: ["#4caf50", "#f44336"],
+  //       },
+  //     ],
+  //   };
+  // }, [timeCapsules]);
 
-  useEffect(() => {
-    const currentDate = new Date();
-    const updatedCapsules = timeCapsules.map((capsule) => {
-      if (new Date(capsule.date) < currentDate && capsule.status === "Locked") {
-        return { ...capsule, status: "Unlocked" };
-      }
-      return capsule;
-    });
-    setTimeCapsules(updatedCapsules);
-    syncInitialTimeCapsules(updatedCapsules);
-    // Sync changes to initialTimeCapsules
-  }, []);
+  // useEffect(() => {
+  //   let id;
+  //   if (isAddingCapsules) {
+  //     id = setInterval(() => {
+  //       const newCapsule = {
+  //         title: faker.lorem.words(3),
+  //         description: faker.lorem.paragraph(),
+  //         date: faker.date.recent(30).toISOString().split("T")[0],
+  //         status: "Locked"
+  //       };
+
+  //       // Update timeCapsules state, this will automatically trigger chartData recalculation
+  //       setTimeCapsules((prevCapsules) => {
+  //         const updatedCapsules = [...prevCapsules, newCapsule];
+  //         handleSort(updatedCapsules, setTimeCapsules, sortOrder);
+  //         return updatedCapsules;
+  //       });
+  //     }, 1000); // Adds a capsule every second
+
+  //     setIntervalId(id);
+  //   } else if (intervalId) {
+  //     clearInterval(intervalId);
+  //   }
+
+  //   return () => {
+  //     if (intervalId) {
+  //       clearInterval(intervalId);
+  //     }
+  //   };
+  // }, [isAddingCapsules, sortOrder]);
 
   const handleSearch = (term) => {
     setSearchTerm(term);
   };
 
-  const handleSort = () => {
+  const handleSortAction = () => {
     setSortOrder((prevOrder) => {
       const newOrder = prevOrder === "asc" ? "desc" : "asc";
-      setTimeCapsules((prevCapsules) =>
-        [...prevCapsules].sort((a, b) =>
-          newOrder === "asc"
-            ? new Date(a.date) - new Date(b.date)
-            : new Date(b.date) - new Date(a.date)
-        )
-      );
+      handleSort(timeCapsules, setTimeCapsules, newOrder);
       return newOrder;
     });
   };
 
-  const handleFilter = () => {
-    setFilterCase((prevFilter) => {
-      const newFilter =
-        prevFilter === "Unlocked" ? "Locked" :
-        prevFilter === "Locked" ? "All" : "Unlocked";
-
-      const filteredCapsules = newFilter === "All"
-        ? initialTimeCapsules
-        : initialTimeCapsules.filter((capsule) => capsule.status === newFilter);
-
-      setTimeCapsules(filteredCapsules);
-      return newFilter;
-    });
+  const handleFilterAction = () => {
+    handleFilter(setFilterCase, setTimeCapsules, initialTimeCapsules);
   };
 
-  const handleDeleteCapsule = (id) => {
-    const updatedCapsules = timeCapsules.filter((capsule) => capsule.id !== id);
-    setTimeCapsules(updatedCapsules);
-    syncInitialTimeCapsules(updatedCapsules); // Sync after deleting
+  const handleDeleteAction = (id) => {
+    handleDeleteCapsule(id, timeCapsules, setTimeCapsules, initialTimeCapsules);
   };
 
-  const handleAddCapsule = (title, date, description) => {
-    if (!title.trim() || !date.trim() || !description.trim()) return;
-
-    const newCapsule = {
-      id: initialTimeCapsules.length + 1, // Ensure unique IDs
+  const handleAddAction = (title, date, description) => {
+    handleAddCapsule(
       title,
       date,
       description,
-      status: "Locked",
-    };
+      timeCapsules,
+      setTimeCapsules,
+      initialTimeCapsules
+    );
+    handleSort(timeCapsules, setTimeCapsules, sortOrder);
+    //updateChartData()
+  };
 
-    const updatedCapsules = [...timeCapsules, newCapsule];
-    setTimeCapsules(updatedCapsules);
-    syncInitialTimeCapsules(updatedCapsules); // Sync after adding
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
   };
 
   const filteredCapsules = timeCapsules.filter((capsule) =>
@@ -102,18 +125,21 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 font-courier">
+    <div className="min-h-screen bg-gray-100 font-courier pb-10">
       <Header />
 
       <SearchBar
         onSearch={handleSearch}
-        onSort={handleSort}
+        onSort={handleSortAction}
         sortOrder={sortOrder}
-        onFilter={handleFilter}
+        onFilter={handleFilterAction}
         filterCase={filterCase}
+        onItemsPerPageChange={handleItemsPerPageChange}
       />
 
-      <CapsulesGrid capsules={currentCapsules} onDelete={handleDeleteCapsule} />
+      {/* <CapsulesChart chartData={chartData}/> */}
+
+      <CapsulesGrid capsules={currentCapsules} onDelete={handleDeleteAction} />
 
       <div className="fixed bottom-3 left-3 right-3 flex justify-between">
         <Pagination
@@ -121,7 +147,17 @@ export default function Home() {
           totalPages={totalPages}
           setCurrentPage={setCurrentPage}
         />
-        <CreateButton onAdd={handleAddCapsule} />
+
+        {/* <div>
+          <button
+            onClick={() => setIsAddingCapsules((prev) => !prev)}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+          >
+            {isAddingCapsules ? "Stop Adding" : "Start Adding Capsules"}
+          </button>
+        </div> */}
+
+        <CreateButton onAdd={handleAddAction} />
       </div>
     </div>
   );

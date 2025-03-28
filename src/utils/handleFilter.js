@@ -15,9 +15,6 @@ export const handleFilter = (
       newFilter === "All"
         ? initialTimeCapsules
         : initialTimeCapsules.filter((capsule) => capsule.status === newFilter);
-
-    console.log("Filtered capsules:", filteredCapsules);
-
     setTimeCapsules(filteredCapsules);
     return newFilter;
   });

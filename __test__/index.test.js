@@ -32,5 +32,18 @@ describe("Filter Functionality", () => {
     expect(screen.queryByText("College Graduation")).not.toBeInTheDocument();
     expect(screen.queryByText("Bucket List Goals")).toBeInTheDocument();
     expect(screen.queryByText("Some title")).toBeInTheDocument();
+
+    fireEvent.click(filterButton);
+
+    expect(screen.getByText("High School Memories")).toBeInTheDocument();
+    expect(screen.getByText("Bucket List Goals")).toBeInTheDocument();
+    expect(screen.getByText("Some title")).toBeInTheDocument();
+    expect(screen.getByText("College Graduation")).toBeInTheDocument();
+
+
+    const searchInput = screen.getByRole("textbox", {name: /searchInput/i});
+    fireEvent.change(searchInput, { target: { value: "High School Memories" } });
+    expect(screen.getByText("High School Memories")).toBeInTheDocument();
+    fireEvent.change(searchInput, { target: { value: "" } });
   });
 });

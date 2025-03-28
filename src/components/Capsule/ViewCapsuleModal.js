@@ -18,7 +18,10 @@ export default function ViewCapsuleModal({
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.5)] text-black z-50">
+    <div
+      className="fixed inset-0 flex items-center justify-center bg-[rgba(0,0,0,0.5)] text-black z-50"
+      data-testid="view-capsule-modal"
+    >
       <div className="bg-white p-6 rounded-xl shadow-lg w-[500px] border border-gray-300">
         <h2 className="text-2xl font-courier text-center mb-4">View Capsule</h2>
 

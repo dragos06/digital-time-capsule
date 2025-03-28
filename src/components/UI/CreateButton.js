@@ -13,6 +13,7 @@ export default function CreateButton({ onAdd }) {
   return (
     <div className="relative">
       <button
+        aria-label="createButton"
         onClick={() => setShowModal(true)} // Show modal when button is clicked
         className="cursor-pointer px-4 py-2 text-xl font-bold bg-gray-200 text-black rounded-4xl drop-shadow-lg"
       >

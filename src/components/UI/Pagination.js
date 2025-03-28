@@ -25,6 +25,7 @@ export default function Pagination({
       {/* Next Button */}
       <button
         onClick={() => setCurrentPage(currentPage + 1)}
+        aria-label="nextButton"
         disabled={currentPage === totalPages}
         className={
           "text-sm px-4 py-2 font-bold text-black rounded-lg " +

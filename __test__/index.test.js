@@ -1,6 +1,12 @@
+jest.mock("../src/components/UI/CapsuleChart", () => () => <div data-testid="mock-chart" />);
+
 import { render, screen, fireEvent } from "@testing-library/react";
 import Home from "@/pages";
 import "@testing-library/jest-dom";
+import "jest-canvas-mock";
+import CapsulesChart from "@/components/UI/CapsuleChart";
+
+
 
 describe("Filter Functionality", () => {
   it("should filter only locked or unlocked time capsules when filter button is clicked", () => {

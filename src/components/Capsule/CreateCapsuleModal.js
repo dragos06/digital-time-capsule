@@ -36,7 +36,7 @@ export default function CreateCapsuleModal({ isOpen, onClose, onAdd }) {
 
         <form onSubmit={handleSubmit} className="space-y-3">
           {/* Capsule Name */}
-          <label className="block font-bold text-lg font-courier">
+          <label htmlFor="title" className="block font-bold text-lg font-courier">
             Capsule Title:
           </label>
           <input
@@ -50,7 +50,7 @@ export default function CreateCapsuleModal({ isOpen, onClose, onAdd }) {
           />
 
           {/* Message */}
-          <label className="block font-bold text-lg font-courier">
+          <label htmlFor="description" className="block font-bold text-lg font-courier">
             Description:
           </label>
           <textarea
@@ -63,7 +63,7 @@ export default function CreateCapsuleModal({ isOpen, onClose, onAdd }) {
           ></textarea>
 
           {/* Date */}
-          <label className="block font-bold text-lg font-courier">Date:</label>
+          <label htmlFor="date" className="block font-bold text-lg font-courier">Date:</label>
           <input
             id="date"
             type="date"

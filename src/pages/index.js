@@ -1,110 +1,73 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/UI/Header";
 import CapsulesGrid from "@/components/Capsule/CapsulesGrid";
 import Pagination from "@/components/UI/Pagination";
 import SearchBar from "@/components/UI/SearchBar";
 import CreateButton from "@/components/UI/CreateButton";
-import initialTimeCapsules from "@/data/Capsules";
-import { handleAddCapsule } from "@/utils/handleAddCapsule";
-import { handleDeleteCapsule } from "@/utils/handleDeleteCapsule";
-import { handleFilter } from "@/utils/handleFilter";
-import { handleSort } from "@/utils/handleSort";
-import { updateCapsulesStatus } from "@/utils/updateCapsulesStatus";
-import CapsulesChart from "@/components/UI/CapsuleChart";
-import { faker } from "@faker-js/faker";
 
 export default function Home() {
-  const [timeCapsules, setTimeCapsules] = useState(initialTimeCapsules);
+  const [timeCapsules, setTimeCapsules] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
   const [filterCase, setFilterCase] = useState("All");
   const [itemsPerPage, setItemsPerPage] = useState(9);
-  const [isAddingCapsules, setIsAddingCapsules] = useState(false); // Track whether the thread is running
-  const [intervalId, setIntervalId] = useState(null); // Store the interval ID
 
-  // const chartData = useMemo(() => {
-  //   const unlockedCount = timeCapsules.filter(
-  //     (capsule) => capsule.status === "Unlocked"
-  //   ).length;
-  //   const lockedCount = timeCapsules.filter(
-  //     (capsule) => capsule.status === "Locked"
-  //   ).length;
+  useEffect(() => {
+    fetchCapsules();
+  }, [searchTerm, sortOrder, filterCase]);
 
-  //   return {
-  //     labels: ["Unlocked", "Locked"],
-  //     datasets: [
-  //       {
-  //         label: "Capsules",
-  //         data: [unlockedCount, lockedCount],
-  //         backgroundColor: ["#4caf50", "#f44336"],
-  //       },
-  //     ],
-  //   };
-  // }, [timeCapsules]);
+  const fetchCapsules = async () => {
+    try {
+      let url = `http://localhost:5000/capsules?search=${searchTerm}&sort=${sortOrder}&status=${filterCase}`;
 
-  // useEffect(() => {
-  //   let id;
-  //   if (isAddingCapsules) {
-  //     id = setInterval(() => {
-  //       const newCapsule = {
-  //         title: faker.lorem.words(3),
-  //         description: faker.lorem.paragraph(),
-  //         date: faker.date.recent(30).toISOString().split("T")[0],
-  //         status: "Locked"
-  //       };
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch capsules");
 
-  //       // Update timeCapsules state, this will automatically trigger chartData recalculation
-  //       setTimeCapsules((prevCapsules) => {
-  //         const updatedCapsules = [...prevCapsules, newCapsule];
-  //         handleSort(updatedCapsules, setTimeCapsules, sortOrder);
-  //         return updatedCapsules;
-  //       });
-  //     }, 1000); // Adds a capsule every second
-
-  //     setIntervalId(id);
-  //   } else if (intervalId) {
-  //     clearInterval(intervalId);
-  //   }
-
-  //   return () => {
-  //     if (intervalId) {
-  //       clearInterval(intervalId);
-  //     }
-  //   };
-  // }, [isAddingCapsules, sortOrder]);
-
-  const handleSearch = (term) => {
-    setSearchTerm(term);
+      const data = await response.json();
+      setTimeCapsules(data);
+    } catch (error) {
+      console.error("Error fetching capsules:", error);
+    }
   };
 
+
   const handleSortAction = () => {
-    setSortOrder((prevOrder) => {
-      const newOrder = prevOrder === "asc" ? "desc" : "asc";
-      handleSort(timeCapsules, setTimeCapsules, newOrder);
-      return newOrder;
-    });
+    setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
   };
 
   const handleFilterAction = () => {
-    handleFilter(setFilterCase, setTimeCapsules, initialTimeCapsules);
+    setFilterCase((prevStatus) => (prevStatus === "All" ? "Locked" : prevStatus === "Locked" ? "Unlocked" : "All"));
   };
 
-  const handleDeleteAction = (id) => {
-    handleDeleteCapsule(id, timeCapsules, setTimeCapsules, initialTimeCapsules);
+  const handleDeleteAction = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:5000/capsules/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Failed to delete capsule");
+
+      setTimeCapsules((prev) => prev.filter((capsule) => capsule.id !== id));
+    } catch (error) {
+      console.error("Error deleting capsule:", error);
+    }
   };
 
-  const handleAddAction = (title, date, description) => {
-    handleAddCapsule(
-      title,
-      date,
-      description,
-      timeCapsules,
-      setTimeCapsules,
-      initialTimeCapsules
-    );
-    handleSort(timeCapsules, setTimeCapsules, sortOrder);
-    //updateChartData()
+  const handleAddAction = async (title, date, description) => {
+    try {
+      const response = await fetch("http://localhost:5000/capsules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, date, description, status: "Locked" }),
+      });
+
+      if (!response.ok) throw new Error("Failed to add capsule");
+
+      fetchCapsules();
+    } catch (error) {
+      console.error("Error adding capsule:", error);
+    }
   };
 
   const handleItemsPerPageChange = (newItemsPerPage) => {
@@ -112,16 +75,10 @@ export default function Home() {
     setCurrentPage(1);
   };
 
-  const filteredCapsules = timeCapsules.filter((capsule) =>
-    capsule.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(filteredCapsules.length / itemsPerPage);
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentCapsules = filteredCapsules.slice(
-    indexOfFirstItem,
-    indexOfLastItem
+  const totalPages = Math.ceil(timeCapsules.length / itemsPerPage);
+  const currentCapsules = timeCapsules.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
   return (
@@ -129,15 +86,13 @@ export default function Home() {
       <Header />
 
       <SearchBar
-        onSearch={handleSearch}
+        onSearch={setSearchTerm}
         onSort={handleSortAction}
         sortOrder={sortOrder}
         onFilter={handleFilterAction}
         filterCase={filterCase}
         onItemsPerPageChange={handleItemsPerPageChange}
       />
-
-      {/* <CapsulesChart chartData={chartData}/> */}
 
       <CapsulesGrid capsules={currentCapsules} onDelete={handleDeleteAction} />
 
@@ -147,15 +102,6 @@ export default function Home() {
           totalPages={totalPages}
           setCurrentPage={setCurrentPage}
         />
-
-        {/* <div>
-          <button
-            onClick={() => setIsAddingCapsules((prev) => !prev)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg"
-          >
-            {isAddingCapsules ? "Stop Adding" : "Start Adding Capsules"}
-          </button>
-        </div> */}
 
         <CreateButton onAdd={handleAddAction} />
       </div>

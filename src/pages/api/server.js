@@ -11,6 +11,32 @@ app.use(express.json());
 
 let timeCapsules = [...initialTimeCapsules];
 
+const validateCapsule = (req, res, next) => {
+  const { title, date, status, description } = req.body;
+  
+  if (!title || !date || !status || !description) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  if (!["Locked", "Unlocked"].includes(status)) {
+    return res.status(400).json({ error: "Invalid status. Must be 'Locked' or 'Unlocked'." });
+  }
+
+  if (status === "Unlocked" && new Date(date) > new Date()){
+    return res.status(400).json({error: "Invalid status. Must be 'Locked' if date is in the future."})
+  }
+
+  if (status === "Locked" && new Date(date) <= new Date()){
+    return res.status(400).json({error: "Invalid status. Must be 'Unlocked' if date is in the past."})
+  }
+
+  if (isNaN(Date.parse(date)) || (new Date(date)).toISOString().split("T")[0] !== date) {
+    return res.status(400).json({ error: "Invalid date format." });
+  }
+
+  next();
+};
+
 app.get('/', (req, res) =>{
     res.redirect('/capsules');
 })
@@ -49,7 +75,7 @@ app.get("/capsule/:id", (req, res) => {
 });
 
 // POST - Add a new capsule
-app.post("/capsules", (req, res) => {
+app.post("/capsules", validateCapsule, (req, res) => {
   const { title, date, status, description } = req.body;
   if (!title || !date || !status || !description) {
     return res.status(400).json({ error: "All fields are required" });
@@ -99,6 +125,10 @@ app.delete("/capsules/:id", (req, res) => {
   res.json({ message: "Capsule deleted successfully" });
 });
 
-app.listen(PORT, () =>
-  console.log(`Server running on http://localhost:${PORT}`)
-);
+
+
+export default app;
+
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+}

@@ -31,13 +31,18 @@ export default function Home() {
     }
   };
 
-
   const handleSortAction = () => {
     setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
   };
 
   const handleFilterAction = () => {
-    setFilterCase((prevStatus) => (prevStatus === "All" ? "Locked" : prevStatus === "Locked" ? "Unlocked" : "All"));
+    setFilterCase((prevStatus) =>
+      prevStatus === "All"
+        ? "Locked"
+        : prevStatus === "Locked"
+        ? "Unlocked"
+        : "All"
+    );
   };
 
   const handleDeleteAction = async (id) => {
@@ -64,9 +69,14 @@ export default function Home() {
 
       if (!response.ok) throw new Error("Failed to add capsule");
 
+      const createdCapsule = await response.json();
+
       fetchCapsules();
+
+      return createdCapsule;
     } catch (error) {
       console.error("Error adding capsule:", error);
+      return null;
     }
   };
 

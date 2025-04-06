@@ -19,7 +19,7 @@ export default function Home() {
 
   const fetchCapsules = async () => {
     try {
-      let url = `http://localhost:5000/capsules?search=${searchTerm}&sort=${sortOrder}&status=${filterCase}`;
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules?search=${searchTerm}&sort=${sortOrder}&status=${filterCase}`;
 
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch capsules");
@@ -47,7 +47,7 @@ export default function Home() {
 
   const handleDeleteAction = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5000/capsules/${id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules/${id}`, {
         method: "DELETE",
       });
 
@@ -61,7 +61,7 @@ export default function Home() {
 
   const handleAddAction = async (title, date, description) => {
     try {
-      const response = await fetch("http://localhost:5000/capsules", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, date, description, status: "Locked" }),

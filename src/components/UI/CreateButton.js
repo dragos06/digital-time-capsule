@@ -6,8 +6,8 @@ export default function CreateButton({ onAdd }) {
 
   const handleClose = () => setShowModal(false);
   const handleAdd = (name, date, message) => {
-    onAdd(name, date, message);
-    setShowModal(false);
+    const createdCapsule = onAdd(name, date, message);
+    return createdCapsule;
   }
 
   return (
@@ -25,6 +25,7 @@ export default function CreateButton({ onAdd }) {
         isOpen={showModal} // Modal visibility controlled by showModal state
         onClose={handleClose} // Pass handleClose to close modal
         onAdd={handleAdd} // Pass handleAdd to add new capsule
+        
       />
     </div>
   );

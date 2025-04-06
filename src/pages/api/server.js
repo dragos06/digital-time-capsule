@@ -5,6 +5,8 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import archiver from "archiver";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 const PORT = 5000;

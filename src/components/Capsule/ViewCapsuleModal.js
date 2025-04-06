@@ -6,15 +6,19 @@ export default function ViewCapsuleModal({
   capsule,
   onDelete,
 }) {
-  if (!isOpen || capsule.status != "Unlocked") return null;
+  if (!isOpen) return null;
 
   const handleDelete = () => {
     onDelete(capsule.id);
     onClose();
   };
 
-  const handleDownload = () => {
-    console.log(`Downloading memories for capsule: ${capsule.title}`);
+  const handleDownload = async () => {
+    const downloadUrl = `http://localhost:5000/capsule/${capsule.id}/download`;
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = `capsule-${capsule.id}.zip`;
+    link.click();
   };
 
   return (

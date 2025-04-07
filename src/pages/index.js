@@ -5,6 +5,12 @@ import Pagination from "@/components/UI/Pagination";
 import SearchBar from "@/components/UI/SearchBar";
 import CreateButton from "@/components/UI/CreateButton";
 import { enqueueOfflineData, syncOfflineQueue } from "@/utils/offlineQueue";
+import { io } from "socket.io-client";
+import PieChart from "@/components/UI/PieChart";
+
+const socket = io(process.env.NEXT_PUBLIC_API_BASE_URL, {
+  transports: ["websocket"],
+});
 
 export default function Home() {
   const [timeCapsules, setTimeCapsules] = useState([]);
@@ -19,6 +25,35 @@ export default function Home() {
 
   const [isOnline, setIsOnline] = useState(null);
   const [isServerReachable, setIsServerReachable] = useState(null);
+
+  useEffect(() => {
+    socket.on("capsuleStats", (updatedStats) => {
+      setCapsuleStats(updatedStats);
+    });
+
+    return () => {
+      socket.off("capsuleStats");
+    };
+  }, []);
+
+  const handleGenerate = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules/generate`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ count: 5 }), // You can change the count
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to generate capsules");
+
+      fetchCapsules(true); // Refresh capsule grid
+    } catch (err) {
+      console.error("Error generating capsules:", err);
+    }
+  };
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
@@ -56,8 +91,8 @@ export default function Home() {
   };
 
   useEffect(() => {
-     setOffset(0);
-     fetchCapsules(true);
+    setOffset(0);
+    fetchCapsules(true);
   }, [searchTerm, sortOrder, filterCase]);
 
   const fetchCapsules = async (reset = false) => {
@@ -209,6 +244,16 @@ export default function Home() {
         filterCase={filterCase}
         onItemsPerPageChange={handleItemsPerPageChange}
       />
+
+      <div className="flex justify-center py-5">
+        <PieChart stats={capsuleStats} />
+        <button
+          className="bg-blue-500 text-white p-2 rounded"
+          onClick={handleGenerate}
+        >
+          Generate Random Capsules
+        </button>
+      </div>
 
       <CapsulesGrid capsules={timeCapsules} onDelete={handleDeleteAction} />
 

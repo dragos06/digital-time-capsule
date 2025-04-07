@@ -13,6 +13,9 @@ export default function Home() {
   const [sortOrder, setSortOrder] = useState("asc");
   const [filterCase, setFilterCase] = useState("All");
   const [itemsPerPage, setItemsPerPage] = useState(9);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const limit = 9;
 
   const [isOnline, setIsOnline] = useState(null);
   const [isServerReachable, setIsServerReachable] = useState(null);
@@ -26,14 +29,17 @@ export default function Home() {
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    const interval = setInterval(checkServerStatus, 5000);
+    const interval = setInterval(() => {
+      checkServerStatus();
+    }, 500);
 
+    console.log({ isOnline, isServerReachable });
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
       clearInterval(interval);
     };
-  }, []);
+  }, [isOnline, isServerReachable]);
 
   const checkServerStatus = async () => {
     try {
@@ -41,29 +47,53 @@ export default function Home() {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules`,
         { method: "GET" }
       );
+      if (!res.ok) throw new Error("Failed to reach server");
       setIsServerReachable(res.ok);
-    } catch {
+    } catch (error) {
       setIsServerReachable(false);
+      console.warn("Server unreachable:", error.message);
     }
   };
 
   useEffect(() => {
-    fetchCapsules();
+     setOffset(0);
+     fetchCapsules(true);
   }, [searchTerm, sortOrder, filterCase]);
 
-  const fetchCapsules = async () => {
+  const fetchCapsules = async (reset = false) => {
     try {
-      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules?search=${searchTerm}&sort=${sortOrder}&status=${filterCase}`;
+      let url = `${
+        process.env.NEXT_PUBLIC_API_BASE_URL
+      }/capsules?search=${searchTerm}&sort=${sortOrder}&status=${filterCase}&offset=${
+        reset ? 0 : offset
+      }&limit=${limit}`;
 
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch capsules");
 
-      const data = await response.json();
-      setTimeCapsules(data);
+      const { capsules, hasMore } = await response.json();
+      setHasMore(hasMore);
+      setTimeCapsules((prev) => (reset ? capsules : [...prev, ...capsules]));
+      setOffset((prev) => (reset ? limit : prev + limit));
     } catch (error) {
-      console.error("Error fetching capsules:", error);
+      setIsServerReachable(false);
+      console.warn("Error fetching capsules:", error);
     }
   };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const bottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 300;
+
+      if (bottom && hasMore) {
+        fetchCapsules();
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [hasMore, offset, searchTerm, sortOrder, filterCase]);
 
   const handleSortAction = () => {
     setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
@@ -143,11 +173,11 @@ export default function Home() {
     setCurrentPage(1);
   };
 
-  const totalPages = Math.ceil(timeCapsules.length / itemsPerPage);
-  const currentCapsules = timeCapsules.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // const totalPages = Math.ceil(timeCapsules.length / itemsPerPage);
+  // const currentCapsules = timeCapsules.slice(
+  //   (currentPage - 1) * itemsPerPage,
+  //   currentPage * itemsPerPage
+  // );
 
   useEffect(() => {
     if (isOnline && isServerReachable) {
@@ -180,14 +210,14 @@ export default function Home() {
         onItemsPerPageChange={handleItemsPerPageChange}
       />
 
-      <CapsulesGrid capsules={currentCapsules} onDelete={handleDeleteAction} />
+      <CapsulesGrid capsules={timeCapsules} onDelete={handleDeleteAction} />
 
       <div className="fixed bottom-3 left-3 right-3 flex justify-between">
-        <Pagination
+        {/* <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
           setCurrentPage={setCurrentPage}
-        />
+        /> */}
 
         <CreateButton onAdd={handleAddAction} />
       </div>

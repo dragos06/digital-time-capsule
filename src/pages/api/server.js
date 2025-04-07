@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.json({ limit: "3gb" }));
 app.use(express.urlencoded({ limit: "3gb", extended: true }));
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.setTimeout(60 * 60 * 1000); // Set a timeout of 1 hour (adjust as needed)
   next();
 });
@@ -58,12 +58,21 @@ const validateCapsule = (req, res, next) => {
 };
 
 app.get("/", (req, res) => {
-  res.redirect("/capsules");
+  res.redirect("/capsules?limit=99");
 });
 
 //GET all capsules
 app.get("/capsules", (req, res) => {
-  let { search, sort, status } = req.query;
+  let {
+    search = "",
+    sort = "asc",
+    status = "All",
+    offset = 0,
+    limit = 9,
+  } = req.query;
+  offset = parseInt(offset);
+  limit = parseInt(limit);
+
   let result = [...timeCapsules];
 
   if (search) {
@@ -84,7 +93,12 @@ app.get("/capsules", (req, res) => {
     );
   }
 
-  res.json(result);
+  const paginated = result.slice(offset, offset + limit);
+
+  res.json({
+    capsules: paginated,
+    hasMore: offset + limit < result.length,
+  });
 });
 
 // GET a capsule by ID

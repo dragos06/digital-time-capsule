@@ -38,12 +38,10 @@ export default function CreateCapsuleModal({ isOpen, onClose, onAdd }) {
       setIsUploading(true);
       await handleUpload(createdCapsule.id, uploadedFiles); // Upload files after capsule creation
       setIsUploading(false);
-
-      setCapsule({ title: "", description: "", date: "" });
-
-      setUploadedFiles([]);
-      onClose();
     }
+    setCapsule({ title: "", description: "", date: "" });
+    setUploadedFiles([]);
+    onClose();
   };
 
   const handleUpload = async (capsuleId, files) => {
@@ -56,7 +54,7 @@ export default function CreateCapsuleModal({ isOpen, onClose, onAdd }) {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/capsule/${capsuleId}/upload`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsule/${capsuleId}/upload`,
         {
           method: "POST",
           body: formData,

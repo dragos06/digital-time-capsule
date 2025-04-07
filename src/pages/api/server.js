@@ -5,6 +5,8 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import archiver from "archiver";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 const PORT = 5000;
@@ -181,7 +183,7 @@ app.post("/capsule/:id/upload", upload.array("file", 100), (req, res) => {
   }
 
   const fileUrls = req.files.map((file) => {
-    return `http://localhost:${PORT}/upload/${capsuleId}/${file.filename}`;
+    return `${process.env.NEXT_PUBLIC_API_BASE_URL}/upload/${capsuleId}/${file.filename}`;
   });
 
   res.status(201).json({ message: "Files uploaded successfully", fileUrls });
@@ -222,6 +224,6 @@ export default app;
 
 if (process.env.NODE_ENV !== "test") {
   app.listen(PORT, () =>
-    console.log(`Server running on http://localhost:${PORT}`)
+    console.log(`Server running on ${process.env.NEXT_PUBLIC_API_BASE_URL}`)
   );
 }

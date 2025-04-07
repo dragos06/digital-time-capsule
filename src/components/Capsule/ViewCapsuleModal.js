@@ -14,7 +14,7 @@ export default function ViewCapsuleModal({
   };
 
   const handleDownload = async () => {
-    const downloadUrl = `http://localhost:5000/capsule/${capsule.id}/download`;
+    const downloadUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsule/${capsule.id}/download`;
     const link = document.createElement("a");
     link.href = downloadUrl;
     link.download = `capsule-${capsule.id}.zip`;

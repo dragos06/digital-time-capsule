@@ -55,7 +55,7 @@ export default function Home() {
     fetchCapsules();
   }, [searchTerm, sortOrder, filterCase]);
 
-  const fetchCapsules = async () => {
+  const fetchCapsules = async (reset = false) => {
     try {
       let url = `${
         process.env.NEXT_PUBLIC_API_BASE_URL

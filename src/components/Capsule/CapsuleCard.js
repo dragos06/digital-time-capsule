@@ -8,7 +8,7 @@ export default function CapsuleCard({ capsule, onDelete }) {
   const closeModal = () => setIsModalOpen(false);
 
   return (
-    <div className="bg-[#D9D9D9] p-4 rounded-lg relative shadow-md">
+    <div className="bg-[#D9D9D9] p-10 rounded-lg relative shadow-md">
       {/* Delete Button */}
       <button
         onClick={() => onDelete(capsule.id)}

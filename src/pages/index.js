@@ -13,6 +13,9 @@ export default function Home() {
   const [sortOrder, setSortOrder] = useState("asc");
   const [filterCase, setFilterCase] = useState("All");
   const [itemsPerPage, setItemsPerPage] = useState(9);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const limit = 9;
 
   const [isOnline, setIsOnline] = useState(null);
   const [isServerReachable, setIsServerReachable] = useState(null);
@@ -48,22 +51,43 @@ export default function Home() {
   };
 
   useEffect(() => {
+    setOffset(0);
     fetchCapsules();
   }, [searchTerm, sortOrder, filterCase]);
 
   const fetchCapsules = async () => {
     try {
-      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules?search=${searchTerm}&sort=${sortOrder}&status=${filterCase}`;
+      let url = `${
+        process.env.NEXT_PUBLIC_API_BASE_URL
+      }/capsules?search=${searchTerm}&sort=${sortOrder}&status=${filterCase}&offset=${
+        reset ? 0 : offset
+      }&limit=${limit}`;
 
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch capsules");
 
-      const data = await response.json();
-      setTimeCapsules(data);
+      const { capsules, hasMore } = await response.json();
+      setHasMore(hasMore);
+      setTimeCapsules((prev) => (reset ? capsules : [...prev, ...capsules]));
+      setOffset((prev) => (reset ? limit : prev + limit));
     } catch (error) {
       console.error("Error fetching capsules:", error);
     }
   };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const bottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 300;
+
+      if (bottom && hasMore) {
+        fetchCapsules();
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [hasMore, offset, searchTerm, sortOrder, filterCase]);
 
   const handleSortAction = () => {
     setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));

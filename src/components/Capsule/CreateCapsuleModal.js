@@ -38,12 +38,10 @@ export default function CreateCapsuleModal({ isOpen, onClose, onAdd }) {
       setIsUploading(true);
       await handleUpload(createdCapsule.id, uploadedFiles); // Upload files after capsule creation
       setIsUploading(false);
-
-      setCapsule({ title: "", description: "", date: "" });
-
-      setUploadedFiles([]);
-      onClose();
     }
+    setCapsule({ title: "", description: "", date: "" });
+    setUploadedFiles([]);
+    onClose();
   };
 
   const handleUpload = async (capsuleId, files) => {

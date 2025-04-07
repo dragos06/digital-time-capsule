@@ -58,7 +58,7 @@ const validateCapsule = (req, res, next) => {
 };
 
 app.get("/", (req, res) => {
-  res.redirect("/capsules");
+  res.redirect("/capsules?limit=99");
 });
 
 //GET all capsules

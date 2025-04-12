@@ -6,9 +6,12 @@ import path from "path";
 import fs from "fs";
 import archiver from "archiver";
 import dotenv from "dotenv";
+import { Server } from "socket.io";
+import http from 'http';
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
 const PORT = 5000;
 
 app.use(cors());
@@ -56,6 +59,73 @@ const validateCapsule = (req, res, next) => {
 
   next();
 };
+
+const generateRandomCapsules = (count) => {
+  const statuses = ["Locked", "Unlocked"];
+  let generatedCapsules = [];
+
+  for (let i = 0; i < count; i++) {
+    const status = statuses[Math.floor(Math.random() * statuses.length)];
+    const date = new Date(
+      status === "Locked"
+        ? new Date().getTime() + Math.random() * 1000000000
+        : new Date().getTime() - Math.random() * 1000000000
+    )
+      .toISOString()
+      .split("T")[0];
+    const title = `Capsule ${Math.random().toString(36).substring(7)}`;
+    const description = `Description of capsule ${Math.random()
+      .toString(36)
+      .substring(7)}`;
+
+    const newCapsule = {
+      id: Math.max(...timeCapsules.map((c) => c.id)) + 1,
+      title,
+      date,
+      status,
+      description,
+    };
+
+    timeCapsules.push(newCapsule);
+    generatedCapsules.push(newCapsule);
+  }
+
+  return generatedCapsules;
+};
+
+// Socket.io Setup
+const io = new Server(server, { cors: { origin: "*" }, methods:["GET","POST"] });
+
+const getCapsuleStats = () => {
+  const stats = { locked: 0, unlocked: 0 };
+  timeCapsules.forEach((capsule) => {
+    if (capsule.status === "Locked") {
+      stats.locked++;
+    } else if (capsule.status === "Unlocked") {
+      stats.unlocked++;
+    }
+  });
+  return stats;
+};
+
+io.on("connection", (socket) => {
+  console.log("New client connected");
+
+  socket.emit("capsuleStats", getCapsuleStats());
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected");
+  });
+});
+
+// Endpoint to generate random capsules
+app.post("/capsules/generate", (req, res) => {
+  const { count } = req.body;
+  const generatedCapsules = generateRandomCapsules(count);
+
+  io.emit("capsuleStats", getCapsuleStats()); // Emit stats update to all connected clients
+  res.status(200).json(generatedCapsules);
+});
 
 app.get("/", (req, res) => {
   res.redirect("/capsules?limit=99");
@@ -237,7 +307,7 @@ app.get("/capsule/:id/download", (req, res) => {
 export default app;
 
 if (process.env.NODE_ENV !== "test") {
-  app.listen(PORT, () =>
+  server.listen(PORT, () =>
     console.log(`Server running on ${process.env.NEXT_PUBLIC_API_BASE_URL}`)
   );
 }

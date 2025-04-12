@@ -7,6 +7,7 @@ import CreateButton from "@/components/UI/CreateButton";
 import { enqueueOfflineData, syncOfflineQueue } from "@/utils/offlineQueue";
 import { io } from "socket.io-client";
 import PieChart from "@/components/UI/PieChart";
+import axios from "axios";
 
 const socket = io(process.env.NEXT_PUBLIC_API_BASE_URL, {
   transports: ["websocket"],
@@ -22,6 +23,9 @@ export default function Home() {
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const limit = 9;
+  const [capsuleStats, setCapsuleStats] = useState({ locked: 0, unlocked: 0 });
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [intervalId, setIntervalId] = useState(null);
 
   const [isOnline, setIsOnline] = useState(null);
   const [isServerReachable, setIsServerReachable] = useState(null);
@@ -37,21 +41,24 @@ export default function Home() {
   }, []);
 
   const handleGenerate = async () => {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules/generate`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ count: 5 }), // You can change the count
-        }
-      );
+    if (isGenerating) {
+      // Stop generating capsules if already generating
+      clearInterval(intervalId);
+      setIsGenerating(false);
+      setIntervalId(null);
+    } else {
+      // Start generating capsules every 2 seconds
+      const id = setInterval(async () => {
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules/generate`,
+          {
+            count: 1,
+          }
+        );
+      }, 2000);
 
-      if (!res.ok) throw new Error("Failed to generate capsules");
-
-      fetchCapsules(true); // Refresh capsule grid
-    } catch (err) {
-      console.error("Error generating capsules:", err);
+      setIntervalId(id);
+      setIsGenerating(true);
     }
   };
 
@@ -66,7 +73,7 @@ export default function Home() {
 
     const interval = setInterval(() => {
       checkServerStatus();
-    }, 500);
+    }, 5000);
 
     console.log({ isOnline, isServerReachable });
     return () => {
@@ -107,6 +114,7 @@ export default function Home() {
       if (!response.ok) throw new Error("Failed to fetch capsules");
 
       const { capsules, hasMore } = await response.json();
+      console.log('Fetched capsules:', capsules, 'Has more:', hasMore);
       setHasMore(hasMore);
       setTimeCapsules((prev) => (reset ? capsules : [...prev, ...capsules]));
       setOffset((prev) => (reset ? limit : prev + limit));
@@ -119,16 +127,29 @@ export default function Home() {
   useEffect(() => {
     const handleScroll = () => {
       const bottom =
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 300;
-
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
+  
+      // Check if the user is close to the bottom and if there are more capsules to load
       if (bottom && hasMore) {
         fetchCapsules();
       }
     };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+  
+    // Debounced scroll handling to prevent multiple rapid calls
+    const debounceHandleScroll = debounce(handleScroll, 300);
+  
+    window.addEventListener("scroll", debounceHandleScroll);
+    return () => window.removeEventListener("scroll", debounceHandleScroll);
   }, [hasMore, offset, searchTerm, sortOrder, filterCase]);
+  
+  // Utility function to create a debounce effect
+  const debounce = (func, delay) => {
+    let timeoutId;
+    return (...args) => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => func(...args), delay);
+    };
+  };
 
   const handleSortAction = () => {
     setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc"));
@@ -248,10 +269,10 @@ export default function Home() {
       <div className="flex justify-center py-5">
         <PieChart stats={capsuleStats} />
         <button
-          className="bg-blue-500 text-white p-2 rounded"
           onClick={handleGenerate}
+          className="bg-blue-500 text-white p-2 rounded"
         >
-          Generate Random Capsules
+          {isGenerating ? "Stop Generating" : "Generate Random Capsules"}
         </button>
       </div>
 

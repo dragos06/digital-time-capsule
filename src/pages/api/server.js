@@ -7,9 +7,11 @@ import fs from "fs";
 import archiver from "archiver";
 import dotenv from "dotenv";
 import { Server } from "socket.io";
+import http from 'http';
 dotenv.config();
 
 const app = express();
+const server = http.createServer(app);
 const PORT = 5000;
 
 app.use(cors());
@@ -92,7 +94,7 @@ const generateRandomCapsules = (count) => {
 };
 
 // Socket.io Setup
-const io = new Server(5001, { cors: { origin: "*" } });
+const io = new Server(server, { cors: { origin: "*" }, methods:["GET","POST"] });
 
 const getCapsuleStats = () => {
   const stats = { locked: 0, unlocked: 0 };
@@ -305,7 +307,7 @@ app.get("/capsule/:id/download", (req, res) => {
 export default app;
 
 if (process.env.NODE_ENV !== "test") {
-  app.listen(PORT, () =>
+  server.listen(PORT, () =>
     console.log(`Server running on ${process.env.NEXT_PUBLIC_API_BASE_URL}`)
   );
 }

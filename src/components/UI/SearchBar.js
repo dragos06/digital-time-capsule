@@ -40,14 +40,14 @@ export default function SearchBar({ onSearch, onSort, sortOrder, onFilter, filte
         Show: {filterCase}
       </button>
 
-      <select
+      {/* <select
         onChange={handleItemsPerPageChange}
         className="px-4 py-2 bg-[#D9D9D9] rounded-4xl text-black drop-shadow-lg mx-2"
       >
         <option value={9}>9</option>
         <option value={15}>15</option>
         <option value={30}>30</option>
-      </select>
+      </select> */}
     </div>
   );
 }

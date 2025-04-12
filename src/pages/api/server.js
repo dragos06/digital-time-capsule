@@ -7,12 +7,20 @@ import fs from "fs";
 import archiver from "archiver";
 import dotenv from "dotenv";
 import { Server } from "socket.io";
-import http from 'http';
+import http from "http";
+import logger from "@/utils/logger.js";
 dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
 const PORT = 5000;
+
+app.use((req, res, next) => {
+  const userIP =
+    req.headers["x-forwarded-for"] || req.socket.remoteAddress || "Unknown IP";
+  logger.info(`Access from ${userIP} - ${req.method} ${req.originalUrl}`);
+  next();
+});
 
 app.use(cors());
 app.use(express.json({ limit: "3gb" }));
@@ -94,7 +102,10 @@ const generateRandomCapsules = (count) => {
 };
 
 // Socket.io Setup
-const io = new Server(server, { cors: { origin: "*" }, methods:["GET","POST"] });
+const io = new Server(server, {
+  cors: { origin: "*" },
+  methods: ["GET", "POST"],
+});
 
 const getCapsuleStats = () => {
   const stats = { locked: 0, unlocked: 0 };

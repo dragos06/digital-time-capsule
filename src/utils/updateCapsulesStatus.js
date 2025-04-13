@@ -1,7 +1,7 @@
 export const updateCapsulesStatus = (timeCapsules, setTimeCapsules) => {
     const currentDate = new Date();
     const updatedCapsules = timeCapsules.map((capsule) => {
-      if (new Date(capsule.date) < currentDate && capsule.status === "Locked") {
+      if (new Date(capsule.capsule_date) < currentDate && capsule.capsule_status === "Locked") {
         return { ...capsule, status: "Unlocked" };
       }
       return capsule;

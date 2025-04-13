@@ -2,20 +2,50 @@ import express from "express";
 import cors from "cors";
 import initialTimeCapsules from "../../data/Capsules.js";
 import multer from "multer";
-import path from "path";
+import { dirname, join } from "path";
 import fs from "fs";
 import archiver from "archiver";
 import dotenv from "dotenv";
 import { Server } from "socket.io";
 import http from "http";
-import logger from "@/utils/logger.js";
+import logger from "../../utils/logger.js";
+import { fileURLToPath } from "url";
+
+
 dotenv.config();
+
+import pkg from "pg";
+const { Pool } = pkg;
+
+const pool = new Pool({
+  user: process.env.PG_USER,
+  host: process.env.PG_HOST,
+  database: process.env.PG_DATABASE,
+  password: process.env.PG_PASSWORD,
+  port: process.env.PG_PORT,
+});
 
 const app = express();
 const server = http.createServer(app);
 const PORT = 5000;
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const accessLogPath = join(__dirname, "./logs/access.log");
+
+try {
+  fs.writeFileSync(accessLogPath, "");
+  console.log("✅ access.log cleared on server start");
+} catch (err) {
+  console.error("❌ Failed to clear access.log:", err);
+}
+
 app.use((req, res, next) => {
+  if (req.headers["x-health-check"] === "true") {
+    return next();
+  }
+
   const userIP =
     req.headers["x-forwarded-for"] || req.socket.remoteAddress || "Unknown IP";
   logger.info(`Access from ${userIP} - ${req.method} ${req.originalUrl}`);
@@ -31,7 +61,7 @@ app.use(function (req, res, next) {
   next();
 });
 
-let timeCapsules = [...initialTimeCapsules];
+//let timeCapsules = [...initialTimeCapsules];
 
 const validateCapsule = (req, res, next) => {
   const { title, date, status, description } = req.body;
@@ -94,7 +124,7 @@ const generateRandomCapsules = (count) => {
       description,
     };
 
-    timeCapsules.push(newCapsule);
+    //timeCapsules.push(newCapsule);
     generatedCapsules.push(newCapsule);
   }
 
@@ -107,27 +137,33 @@ const io = new Server(server, {
   methods: ["GET", "POST"],
 });
 
-const getCapsuleStats = () => {
+const getCapsuleStats = async () => {
+  const result = await pool.query(`
+    SELECT capsule_status, COUNT(*) AS count
+    FROM time_capsules
+    GROUP BY capsule_status
+  `);
   const stats = { locked: 0, unlocked: 0 };
-  timeCapsules.forEach((capsule) => {
-    if (capsule.status === "Locked") {
-      stats.locked++;
-    } else if (capsule.status === "Unlocked") {
-      stats.unlocked++;
-    }
+  result.rows.forEach(row => {
+    if (row.status === "Locked") stats.locked += parseInt(row.count);
+    if (row.status === "Unlocked") stats.unlocked += parseInt(row.count);
   });
   return stats;
 };
 
-io.on("connection", (socket) => {
-  console.log("New client connected");
 
-  socket.emit("capsuleStats", getCapsuleStats());
+io.on("connection", async (socket) => {
+  const ip = socket.handshake.headers["x-forwarded-for"] || socket.handshake.address;
+  console.log(`New client connected: ${socket.id} | IP: ${ip}`);
+
+  const stats = await getCapsuleStats();
+  socket.emit("capsuleStats", stats);
 
   socket.on("disconnect", () => {
-    console.log("Client disconnected");
+    console.log(`Client disconnected: ${socket.id} | IP: ${ip}`);
   });
 });
+
 
 // Endpoint to generate random capsules
 app.post("/capsules/generate", (req, res) => {
@@ -143,7 +179,7 @@ app.get("/", (req, res) => {
 });
 
 //GET all capsules
-app.get("/capsules", (req, res) => {
+app.get("/capsules", async (req, res) => {
   let {
     search = "",
     sort = "asc",
@@ -151,96 +187,131 @@ app.get("/capsules", (req, res) => {
     offset = 0,
     limit = 9,
   } = req.query;
+
   offset = parseInt(offset);
   limit = parseInt(limit);
 
-  let result = [...timeCapsules];
+  try {
+    let query = "SELECT * FROM time_capsules WHERE 1=1";
+    let values = [];
 
-  if (search) {
-    result = result.filter((capsule) =>
-      capsule.title.toLowerCase().includes(search.toLowerCase())
-    );
+    if (search) {
+      values.push(`%${search.toLocaleLowerCase()}%`);
+      query += ` AND LOWER(capsule_title) LIKE $${values.length}`;
+    }
+
+    if (status === "Locked" || status === "Unlocked") {
+      values.push(status);
+      query += ` AND capsule_status = $${values.length}`;
+    }
+
+    query += ` ORDER BY capsule_date ${
+      sort === "desc" ? "DESC" : "ASC"
+    } LIMIT $${values.length + 1} OFFSET $${values.length + 2}`;
+    values.push(limit, offset);
+
+    const result = await pool.query(query, values);
+
+    const formattedRows = result.rows.map(row => ({
+      ...row,
+      capsule_date: new Date(row.capsule_date).toISOString().split('T')[0],
+    }));
+
+    const countResult = await pool.query("SELECT COUNT(*) FROM time_capsules");
+    const total = parseInt(countResult.rows[0].count);
+
+    res.json({
+      capsules: formattedRows,
+      hasMore: offset + limit < total,
+    });
+  } catch (err) {
+    console.error("Error fetching capsules: ", err);
+    res.status(500).json({ error: "Internal server error" });
   }
-
-  if (status === "Locked" || status === "Unlocked") {
-    result = result.filter((capsule) => capsule.status === status);
-  }
-
-  if (sort === "asc" || sort === "desc") {
-    result.sort((a, b) =>
-      sort === "asc"
-        ? a.date.localeCompare(b.date)
-        : b.date.localeCompare(a.date)
-    );
-  }
-
-  const paginated = result.slice(offset, offset + limit);
-
-  res.json({
-    capsules: paginated,
-    hasMore: offset + limit < result.length,
-  });
 });
 
 // GET a capsule by ID
-app.get("/capsule/:id", (req, res) => {
-  const capsule = timeCapsules.find((c) => c.id === parseInt(req.params.id));
-  if (!capsule) return res.status(404).json({ error: "Capsule not found" });
-  res.json(capsule);
+app.get("/capsule/:id", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM time_capsules WHERE capsule_id = $1", [
+      req.params.id,
+    ]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Capsule not found" });
+    }
+
+    const formattedRows = result.rows.map(row => ({
+      ...row,
+      capsule_date: new Date(row.capsule_date).toISOString().split('T')[0],
+    }));
+
+    res.json(formattedRows[0]);
+  } catch (err) {
+    console.error("Error fetching capsule:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 // POST - Add a new capsule
-app.post("/capsules", validateCapsule, (req, res) => {
+app.post("/capsules", validateCapsule, async (req, res) => {
   const { title, date, status, description } = req.body;
-  if (!title || !date || !status || !description) {
-    return res.status(400).json({ error: "All fields are required" });
+  try {
+    const result = await pool.query(
+      `INSERT INTO time_capsules (capsule_title, capsule_date, capsule_status, capsule_description)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [title, date, status, description]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error("Error inserting capsule:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
-  const newCapsule = {
-    id: Math.max(...timeCapsules.map((c) => c.id)) + 1,
-    title,
-    date,
-    status,
-    description,
-  };
-
-  timeCapsules.push(newCapsule);
-  res.status(201).json(newCapsule);
 });
 
 // PUT - Update a capsule
-app.put("/capsule/:id", (req, res) => {
+app.put("/capsule/:id", validateCapsule, async (req, res) => {
   const { title, date, status, description } = req.body;
-  const capsuleIndex = timeCapsules.findIndex(
-    (c) => c.id === parseInt(req.params.id)
-  );
-
-  if (capsuleIndex === -1) {
-    return res.status(404).json({ error: "Capsule not found" });
+  try {
+    const result = await pool.query(
+      `UPDATE time_capsules
+       SET capsule_title = $1, capsule_date = $2, capsule_status = $3, capsule_description = $4
+       WHERE capsule_id = $5 RETURNING *`,
+      [title, date, status, description, req.params.id]
+    );
+    if (result.rows.length === 0)
+      return res.status(404).json({ error: "Capsule not found" });
+    
+    const formattedRows = result.rows.map(row => ({
+      ...row,
+      capsule_date: new Date(row.capsule_date).toISOString().split('T')[0],
+    }));
+    
+    res.json(formattedRows[0]);
+  } catch (err) {
+    console.error("Error updating capsule:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
-
-  timeCapsules[capsuleIndex] = {
-    ...timeCapsules[capsuleIndex],
-    title,
-    date,
-    status,
-    description,
-  };
-  res.json(timeCapsules[capsuleIndex]);
 });
 
 // DELETE - Remove a capsule
-app.delete("/capsules/:id", (req, res) => {
-  const capsuleIndex = timeCapsules.findIndex(
-    (c) => c.id === parseInt(req.params.id)
-  );
-  if (capsuleIndex === -1)
-    return res.status(404).json({ error: "Capsule not found" });
+app.delete("/capsules/:id", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "DELETE FROM time_capsules WHERE capsule_id = $1 RETURNING *",
+      [req.params.id]
+    );
+    if (result.rows.length === 0)
+      return res.status(404).json({ error: "Capsule not found" });
 
-  timeCapsules.splice(capsuleIndex, 1);
-  res.json({ message: "Capsule deleted successfully" });
+    res.json({ message: "Capsule deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting capsule:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
-const uploadDir = path.join("upload");
+
+const uploadDir = join("upload");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }

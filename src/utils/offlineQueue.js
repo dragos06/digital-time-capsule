@@ -45,6 +45,7 @@ export async function syncOfflineQueue(apiUrl) {
       if (!res.ok) throw new Error("Failed to sync one item");
     } catch (error) {
       console.error("Sync error:", error);
+      localStorage.clear();
       return; // Stop syncing if one fails
     }
   }

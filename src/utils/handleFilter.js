@@ -14,7 +14,7 @@ export const handleFilter = (
     const filteredCapsules =
       newFilter === "All"
         ? initialTimeCapsules
-        : initialTimeCapsules.filter((capsule) => capsule.status === newFilter);
+        : initialTimeCapsules.filter((capsule) => capsule.capsule_status === newFilter);
     setTimeCapsules(filteredCapsules);
     return newFilter;
   });

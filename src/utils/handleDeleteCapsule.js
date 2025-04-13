@@ -6,7 +6,7 @@ export const handleDeleteCapsule = (
   setTimeCapsules,
   initialTimeCapsules
 ) => {
-  const updatedCapsules = timeCapsules.filter((capsule) => capsule.id !== id);
+  const updatedCapsules = timeCapsules.filter((capsule) => capsule.capsule_id !== id);
   setTimeCapsules(updatedCapsules);
   syncInitialTimeCapsules(updatedCapsules, initialTimeCapsules); // Sync after deleting
 };

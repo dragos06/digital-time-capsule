@@ -2,9 +2,9 @@ import { useState } from "react";
 
 export default function CreateCapsuleModal({ isOpen, onClose, onAdd }) {
   const [capsule, setCapsule] = useState({
-    title: "",
-    description: "",
-    date: "",
+    capsule_title: "",
+    capsule_description: "",
+    capsule_date: "",
   });
 
   const [error, setError] = useState(""); // Validation state
@@ -23,15 +23,15 @@ export default function CreateCapsuleModal({ isOpen, onClose, onAdd }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!capsule.title || !capsule.date || !capsule.description) {
+    if (!capsule.capsule_title || !capsule.capsule_date || !capsule.capsule_description) {
       setError("All fields are required!"); // Show error if any field is empty
       return;
     }
 
     const createdCapsule = await onAdd(
-      capsule.title,
-      capsule.date,
-      capsule.description
+      capsule.capsule_title,
+      capsule.capsule_date,
+      capsule.capsule_description
     );
 
     if (createdCapsule && createdCapsule.id) {
@@ -39,7 +39,7 @@ export default function CreateCapsuleModal({ isOpen, onClose, onAdd }) {
       await handleUpload(createdCapsule.id, uploadedFiles); // Upload files after capsule creation
       setIsUploading(false);
     }
-    setCapsule({ title: "", description: "", date: "" });
+    setCapsule({ capsule_title: "", capsule_description: "", capsule_date: "" });
     setUploadedFiles([]);
     onClose();
   };
@@ -100,8 +100,8 @@ export default function CreateCapsuleModal({ isOpen, onClose, onAdd }) {
           <input
             id="title"
             type="text"
-            name="title"
-            value={capsule.title}
+            name="capsule_title"
+            value={capsule.capsule_title}
             onChange={handleChange}
             placeholder="Please enter capsule title..."
             className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
@@ -116,8 +116,8 @@ export default function CreateCapsuleModal({ isOpen, onClose, onAdd }) {
           </label>
           <textarea
             id="description"
-            name="description"
-            value={capsule.description}
+            name="capsule_description"
+            value={capsule.capsule_description}
             onChange={handleChange}
             placeholder="Please enter capsule description..."
             className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100 h-28"
@@ -133,9 +133,9 @@ export default function CreateCapsuleModal({ isOpen, onClose, onAdd }) {
           <input
             id="date"
             type="date"
-            name="date"
-            value={capsule.date}
-            min={new Date().toISOString().split("T")[0]}
+            name="capsule_date"
+            value={capsule.capsule_date}
+            min={new Date(Date.now() + 86400000).toISOString().split("T")[0]}
             onChange={handleChange}
             className="w-full p-2 border border-gray-300 rounded-lg bg-gray-100"
           />

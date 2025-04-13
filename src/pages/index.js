@@ -87,7 +87,7 @@ export default function Home() {
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules`,
-        { method: "GET" }
+        { method: "GET", headers: { "X-Health-Check": "true" } }
       );
       if (!res.ok) throw new Error("Failed to reach server");
       setIsServerReachable(res.ok);
@@ -114,7 +114,7 @@ export default function Home() {
       if (!response.ok) throw new Error("Failed to fetch capsules");
 
       const { capsules, hasMore } = await response.json();
-      console.log('Fetched capsules:', capsules, 'Has more:', hasMore);
+      console.log("Fetched capsules:", capsules, "Has more:", hasMore);
       setHasMore(hasMore);
       setTimeCapsules((prev) => (reset ? capsules : [...prev, ...capsules]));
       setOffset((prev) => (reset ? limit : prev + limit));
@@ -128,20 +128,20 @@ export default function Home() {
     const handleScroll = () => {
       const bottom =
         window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
-  
+
       // Check if the user is close to the bottom and if there are more capsules to load
       if (bottom && hasMore) {
         fetchCapsules();
       }
     };
-  
+
     // Debounced scroll handling to prevent multiple rapid calls
     const debounceHandleScroll = debounce(handleScroll, 300);
-  
+
     window.addEventListener("scroll", debounceHandleScroll);
     return () => window.removeEventListener("scroll", debounceHandleScroll);
   }, [hasMore, offset, searchTerm, sortOrder, filterCase]);
-  
+
   // Utility function to create a debounce effect
   const debounce = (func, delay) => {
     let timeoutId;
@@ -168,7 +168,7 @@ export default function Home() {
   const handleDeleteAction = async (id) => {
     const deletePayload = { id };
 
-    setTimeCapsules((prev) => prev.filter((capsule) => capsule.id !== id));
+    setTimeCapsules((prev) => prev.filter((capsule) => capsule.capsule_id !== id));
 
     if (!isOnline || !isServerReachable) {
       enqueueOfflineData({ type: "DELETE", data: deletePayload });
@@ -266,7 +266,7 @@ export default function Home() {
         onItemsPerPageChange={handleItemsPerPageChange}
       />
 
-      <div className="flex justify-center py-5">
+      {/* <div className="flex justify-center py-5">
         <PieChart stats={capsuleStats} />
         <button
           onClick={handleGenerate}
@@ -274,7 +274,7 @@ export default function Home() {
         >
           {isGenerating ? "Stop Generating" : "Generate Random Capsules"}
         </button>
-      </div>
+      </div> */}
 
       <CapsulesGrid capsules={timeCapsules} onDelete={handleDeleteAction} />
 

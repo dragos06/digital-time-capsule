@@ -9,15 +9,15 @@ export default function ViewCapsuleModal({
   if (!isOpen) return null;
 
   const handleDelete = () => {
-    onDelete(capsule.id);
+    onDelete(capsule.capsule_id);
     onClose();
   };
 
   const handleDownload = async () => {
-    const downloadUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsule/${capsule.id}/download`;
+    const downloadUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsule/${capsule.capsule_id}/download`;
     const link = document.createElement("a");
     link.href = downloadUrl;
-    link.download = `capsule-${capsule.id}.zip`;
+    link.download = `capsule-${capsule.capsule_id}.zip`;
     link.click();
   };
 
@@ -37,7 +37,7 @@ export default function ViewCapsuleModal({
               Capsule Name:
             </label>
             <p className="p-2 border border-gray-300 rounded-lg bg-gray-100">
-              {capsule.title}
+              {capsule.capsule_title}
             </p>
           </div>
 
@@ -47,7 +47,7 @@ export default function ViewCapsuleModal({
               Message:
             </label>
             <div className="p-2 border border-gray-300 rounded-lg bg-gray-100 h-28 overflow-y-auto resize-y">
-              {capsule.description}
+              {capsule.capsule_description}
             </div>
           </div>
 
@@ -57,7 +57,7 @@ export default function ViewCapsuleModal({
               Date:
             </label>
             <p className="p-2 border border-gray-300 rounded-lg bg-gray-100">
-              {capsule.date}
+              {capsule.capsule_date}
             </p>
           </div>
         </div>

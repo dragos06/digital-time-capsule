@@ -319,7 +319,7 @@ if (!fs.existsSync(uploadDir)) {
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const capsuleId = req.params.id;
-    const capsuleUploadDir = path.join(uploadDir, capsuleId.toString());
+    const capsuleUploadDir = join(uploadDir, capsuleId.toString());
 
     if (!fs.existsSync(capsuleUploadDir)) {
       fs.mkdirSync(capsuleUploadDir, { recursive: true });
@@ -338,21 +338,40 @@ const upload = multer({
 });
 
 //UPLOAD
-app.post("/capsule/:id/upload", upload.array("file", 100), (req, res) => {
+app.post("/capsule/:id/upload", upload.array("file", 100), async (req, res) => {
   const capsuleId = parseInt(req.params.id);
-  const capsule = timeCapsules.find((c) => c.id === capsuleId);
-  if (!capsule) {
-    return res.status(404).json({ error: "Capsule not found" });
+
+  const capsuleCheck = await pool.query("SELECT * FROM time_capsules WHERE capsule_id = $1", [capsuleId]);
+  if (capsuleCheck.rows.length === 0){
+    return res.status(404).json({error: "Capsule not found"});
   }
+
   if (!req.files || req.files.length === 0) {
     return res.status(400).json({ error: "No files uploaded" });
   }
 
-  const fileUrls = req.files.map((file) => {
-    return `${process.env.NEXT_PUBLIC_API_BASE_URL}/upload/${capsuleId}/${file.filename}`;
+  const fileInfos = [];
+
+  for (const file of req.files){
+    const filePath = `${process.env.NEXT_PUBLIC_API_BASE_URL}/upload/${capsuleId}/${file.filename}`;
+    const fileName = file.originalname;
+    const fileType = file.mimetype;
+    const fileSize = file.size;
+
+    await pool.query(
+      `INSERT INTO memories (capsule_id, file_name, file_path, file_type, file_size)
+      VALUES ($1, $2, $3, $4, $5)`,
+      [capsuleId, fileName, filePath, fileType, fileSize]
+    );
+
+    fileInfos.push({fileName, filePath, fileType, fileSize});
+  }
+
+  res.status(201).json({
+    message: "Files uploaded and metadata saved successfully",
+    files: fileInfos,
   });
 
-  res.status(201).json({ message: "Files uploaded successfully", fileUrls });
 });
 
 app.use("/upload", express.static(uploadDir));
@@ -360,7 +379,7 @@ app.use("/upload", express.static(uploadDir));
 //DOWNLOAD
 app.get("/capsule/:id/download", (req, res) => {
   const capsuleId = req.params.id;
-  const capsuleUploadDir = path.join(uploadDir, capsuleId.toString());
+  const capsuleUploadDir = join(uploadDir, capsuleId.toString());
 
   if (!fs.existsSync(capsuleUploadDir)) {
     return res.status(404).json({ error: "Capsule not found" });
@@ -378,7 +397,7 @@ app.get("/capsule/:id/download", (req, res) => {
   archive.pipe(res);
 
   fs.readdirSync(capsuleUploadDir).forEach((file) => {
-    const filePath = path.join(capsuleUploadDir, file);
+    const filePath = join(capsuleUploadDir, file);
     if (fs.statSync(filePath).isFile()) {
       archive.file(filePath, { name: file });
     }

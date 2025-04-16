@@ -34,9 +34,9 @@ export default function CreateCapsuleModal({ isOpen, onClose, onAdd }) {
       capsule.capsule_description
     );
 
-    if (createdCapsule && createdCapsule.id) {
+    if (createdCapsule && createdCapsule.capsule_id) {
       setIsUploading(true);
-      await handleUpload(createdCapsule.id, uploadedFiles); // Upload files after capsule creation
+      await handleUpload(createdCapsule.capsule_id, uploadedFiles); // Upload files after capsule creation
       setIsUploading(false);
     }
     setCapsule({ capsule_title: "", capsule_description: "", capsule_date: "" });
@@ -64,7 +64,7 @@ export default function CreateCapsuleModal({ isOpen, onClose, onAdd }) {
       if (!response.ok) throw new Error("Upload failed");
 
       const data = await response.json();
-      console.log("Files uploaded successfully:", data.fileUrls);
+      console.log("Files uploaded successfully:", data.files);
     } catch (error) {
       console.error("Upload error:", error);
       setError("Files upload failed.");

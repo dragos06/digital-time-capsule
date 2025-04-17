@@ -54,7 +54,7 @@ export default function CreateCapsuleModal({ isOpen, onClose, onAdd }) {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsule/${capsuleId}/upload`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules/${capsuleId}/upload`,
         {
           method: "POST",
           body: formData,

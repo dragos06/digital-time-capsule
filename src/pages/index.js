@@ -266,7 +266,7 @@ export default function Home() {
         onItemsPerPageChange={handleItemsPerPageChange}
       />
 
-      {/* <div className="flex justify-center py-5">
+      <div className="flex justify-center py-5">
         <PieChart stats={capsuleStats} />
         <button
           onClick={handleGenerate}
@@ -274,7 +274,7 @@ export default function Home() {
         >
           {isGenerating ? "Stop Generating" : "Generate Random Capsules"}
         </button>
-      </div> */}
+      </div>
 
       <CapsulesGrid capsules={timeCapsules} onDelete={handleDeleteAction} />
 

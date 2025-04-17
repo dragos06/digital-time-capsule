@@ -1,41 +1,19 @@
 import express from "express";
 import cors from "cors";
-import { dirname, join } from "path";
-import fs from "fs";
+import { join } from "path";
 import http from "http";
-import logger from "../../utils/logger.js";
-import { fileURLToPath } from "url";
 import capsuleRoutes from "../../routes/capsuleRoutes.js";
 import generateRoutes from "../../routes/generateRoutes.js";
 import fileRoutes from "../../routes/fileRoutes.js";
+import {
+  logRequests,
+  initializeLogFile,
+} from "../../middlewares/logRequests.js";
 import { initSocket } from "../../services/socketService.js";
 
 const app = express();
 const server = http.createServer(app);
 const PORT = 5000;
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const accessLogPath = join(__dirname, "./logs/access.log");
-
-try {
-  fs.writeFileSync(accessLogPath, "");
-  console.log("✅ access.log cleared on server start");
-} catch (err) {
-  console.error("❌ Failed to clear access.log:", err);
-}
-
-app.use((req, res, next) => {
-  if (req.headers["x-health-check"] === "true") {
-    return next();
-  }
-
-  const userIP =
-    req.headers["x-forwarded-for"] || req.socket.remoteAddress || "Unknown IP";
-  logger.info(`Access from ${userIP} - ${req.method} ${req.originalUrl}`);
-  next();
-});
 
 app.use(cors());
 app.use(express.json({ limit: "3gb" }));
@@ -49,6 +27,9 @@ app.use(function (req, res, next) {
 app.get("/", (req, res) => {
   res.redirect("/capsules?limit=99");
 });
+
+initializeLogFile();
+app.use(logRequests);
 
 app.use("/capsules", capsuleRoutes);
 app.use("/capsules", generateRoutes);

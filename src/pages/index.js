@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import Header from "@/components/UI/Header";
 import CapsulesGrid from "@/components/Capsule/CapsulesGrid";
-import Pagination from "@/components/UI/Pagination";
 import SearchBar from "@/components/UI/SearchBar";
 import CreateButton from "@/components/UI/CreateButton";
 import { enqueueOfflineData, syncOfflineQueue } from "@/utils/offlineQueue";
@@ -15,18 +14,15 @@ const socket = io(process.env.NEXT_PUBLIC_API_BASE_URL, {
 
 export default function Home() {
   const [timeCapsules, setTimeCapsules] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
   const [filterCase, setFilterCase] = useState("All");
-  const [itemsPerPage, setItemsPerPage] = useState(9);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const limit = 9;
   const [capsuleStats, setCapsuleStats] = useState({ locked: 0, unlocked: 0 });
   const [isGenerating, setIsGenerating] = useState(false);
   const [intervalId, setIntervalId] = useState(null);
-
   const [isOnline, setIsOnline] = useState(null);
   const [isServerReachable, setIsServerReachable] = useState(null);
 
@@ -42,12 +38,10 @@ export default function Home() {
 
   const handleGenerate = async () => {
     if (isGenerating) {
-      // Stop generating capsules if already generating
       clearInterval(intervalId);
       setIsGenerating(false);
       setIntervalId(null);
     } else {
-      // Start generating capsules every 2 seconds
       const id = setInterval(async () => {
         await axios.post(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules/generate`,
@@ -129,20 +123,17 @@ export default function Home() {
       const bottom =
         window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
 
-      // Check if the user is close to the bottom and if there are more capsules to load
       if (bottom && hasMore) {
         fetchCapsules();
       }
     };
 
-    // Debounced scroll handling to prevent multiple rapid calls
     const debounceHandleScroll = debounce(handleScroll, 300);
 
     window.addEventListener("scroll", debounceHandleScroll);
     return () => window.removeEventListener("scroll", debounceHandleScroll);
   }, [hasMore, offset, searchTerm, sortOrder, filterCase]);
 
-  // Utility function to create a debounce effect
   const debounce = (func, delay) => {
     let timeoutId;
     return (...args) => {
@@ -168,7 +159,9 @@ export default function Home() {
   const handleDeleteAction = async (id) => {
     const deletePayload = { id };
 
-    setTimeCapsules((prev) => prev.filter((capsule) => capsule.capsule_id !== id));
+    setTimeCapsules((prev) =>
+      prev.filter((capsule) => capsule.capsule_id !== id)
+    );
 
     if (!isOnline || !isServerReachable) {
       enqueueOfflineData({ type: "DELETE", data: deletePayload });
@@ -224,17 +217,6 @@ export default function Home() {
     }
   };
 
-  const handleItemsPerPageChange = (newItemsPerPage) => {
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1);
-  };
-
-  // const totalPages = Math.ceil(timeCapsules.length / itemsPerPage);
-  // const currentCapsules = timeCapsules.slice(
-  //   (currentPage - 1) * itemsPerPage,
-  //   currentPage * itemsPerPage
-  // );
-
   useEffect(() => {
     if (isOnline && isServerReachable) {
       syncOfflineQueue(process.env.NEXT_PUBLIC_API_BASE_URL);
@@ -263,10 +245,9 @@ export default function Home() {
         sortOrder={sortOrder}
         onFilter={handleFilterAction}
         filterCase={filterCase}
-        onItemsPerPageChange={handleItemsPerPageChange}
       />
 
-      <div className="flex justify-center py-5">
+      {/* <div className="flex justify-center py-5">
         <PieChart stats={capsuleStats} />
         <button
           onClick={handleGenerate}
@@ -274,17 +255,11 @@ export default function Home() {
         >
           {isGenerating ? "Stop Generating" : "Generate Random Capsules"}
         </button>
-      </div>
+      </div> */}
 
       <CapsulesGrid capsules={timeCapsules} onDelete={handleDeleteAction} />
 
-      <div className="fixed bottom-3 left-3 right-3 flex justify-between">
-        {/* <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          setCurrentPage={setCurrentPage}
-        /> */}
-
+      <div className="fixed bottom-3 left-3 right-3 flex justify-end">
         <CreateButton onAdd={handleAddAction} />
       </div>
     </div>

@@ -1,6 +1,6 @@
 export default function Header() {
   return (
-    <h1 className="bg-[#D9D9D9] text-4xl h-[60px] text-black text-center p-3 shadow-lg">
+    <h1 className="bg-[#D9D9D9] text-4xl h-[60px] text-black text-center p-3 shadow-lg border-b-2">
       Digital Time Capsule
     </h1>
   );

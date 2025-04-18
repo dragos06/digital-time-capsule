@@ -1,40 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
+# Digital Time Capsule
+
+The **Digital Time Capsule** is a web application that allows users to create, manage, and interact with virtual time capsules. Users can add memories, set future open dates, and upload files to their capsules. The project is built using modern web technologies and follows a modular architecture for scalability and maintainability.
+
+## Features
+
+- **Create Time Capsules**: Users can create time capsules with a title, description, and a future open date.
+- **Upload Memories**: Files can be uploaded and associated with specific capsules.
+- **View Capsules**: Users can view capsule details, including uploaded files and metadata.
+- **Delete Capsules**: Capsules can be deleted when no longer needed.
+- **Download Memories**: Users can download all files associated with a capsule as a ZIP archive.
+- **Search and Filter**: Capsules can be searched and filtered by title, status, or other criteria.
+- **Offline Support**: Changes made while offline are queued and synced when the user reconnects.
+- **Real-Time Updates**: Capsule statistics are updated in real-time using WebSockets.
+
+## Technologies Used
+
+### Frontend
+- **React**: For building the user interface.
+- **Next.js**: For server-side rendering and routing.
+- **Tailwind CSS**: For styling and responsive design.
+- **Chart.js**: For visualizing capsule statistics.
+
+### Backend
+- **Node.js**: For the server-side runtime.
+- **Express.js**: For building the REST API.
+- **PostgreSQL**: For managing the database.
+- **Multer**: For handling file uploads.
+- **Archiver**: For creating ZIP archives of capsule memories.
+
+### Other Tools
+- **Socket.IO**: For real-time communication.
+- **Winston**: For logging server activity.
+- **Jest**: For unit testing both frontend and backend components.
+- **Supertest**: For testing API endpoints.
+
+## Project Structure
+
+### Frontend
+- **Components**: Reusable UI components like `CapsuleCard`, `CreateCapsuleModal`, and `ViewCapsuleModal`.
+- **Pages**: Next.js pages, including the main `Home` page.
+- **Styles**: Global styles managed with Tailwind CSS.
+
+### Backend
+- **Controllers**: Business logic for handling requests (e.g., `fileController.js`).
+- **Routes**: API endpoints for capsules and file operations.
+- **Services**: Database interaction and utility functions (e.g., `capsuleService.js`, `fileService.js`).
+- **Middlewares**: Custom middleware for logging and request handling.
+
+### Database
+- **PostgreSQL**: Used to store capsule metadata and file information.
+
+## Key Functionalities
+
+### Capsule Management
+- Capsules are created with a title, description, and open date.
+- Capsules can be filtered by status (`Locked` or `Unlocked`) and searched by title.
+
+### File Upload and Download
+- Users can upload multiple files to a capsule.
+- Files are stored on the server and can be downloaded as a ZIP archive.
+
+### Real-Time Updates
+- Capsule statistics (e.g., number of locked/unlocked capsules) are updated in real-time using WebSockets.
+
+### Offline Support
+- Actions performed while offline are queued and synced when the user reconnects.
+
+## Testing
+
+- **Frontend Tests**: Written using Jest and React Testing Library. Tests cover components like `ViewCapsuleModal` and `CreateCapsuleModal`.
+- **Backend Tests**: API endpoints are tested using Jest and Supertest.
 
 ## Getting Started
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
-
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
-
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
-
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+### Prerequisites
+- Node.js
+- PostgreSQL

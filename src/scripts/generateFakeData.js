@@ -28,7 +28,7 @@ async function insertData() {
             [
                 capsuleId,
                 faker.system.fileName(),
-                `/uploades/${faker.string.uuid()}.jpg`,
+                `/uploads/${faker.string.uuid()}.jpg`,
                 `image/jpeg`,
                 faker.number.int({min: 10000, max:5000000}),
                 faker.date.recent(90).toISOString()

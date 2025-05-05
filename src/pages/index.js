@@ -110,7 +110,13 @@ export default function Home() {
       const { capsules, hasMore } = await response.json();
       console.log("Fetched capsules:", capsules, "Has more:", hasMore);
       setHasMore(hasMore);
-      setTimeCapsules((prev) => (reset ? capsules : [...prev, ...capsules]));
+      setTimeCapsules((prev) => {
+        const merged = reset ? capsules : [...prev, ...capsules];
+        const uniqueCapsules = Array.from(
+          new Map(merged.map((c) => [c.capsule_id, c])).values()
+        );
+        return uniqueCapsules;
+      });
       setOffset((prev) => (reset ? limit : prev + limit));
     } catch (error) {
       setIsServerReachable(false);
@@ -128,7 +134,7 @@ export default function Home() {
       }
     };
 
-    const debounceHandleScroll = debounce(handleScroll, 300);
+    const debounceHandleScroll = debounce(handleScroll, 200);
 
     window.addEventListener("scroll", debounceHandleScroll);
     return () => window.removeEventListener("scroll", debounceHandleScroll);

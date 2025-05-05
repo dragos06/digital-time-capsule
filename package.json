@@ -13,10 +13,11 @@
     "lint": "next lint",
     "test": "jest --coverage",
     "test:backend": "jest --config=jest.backend.config.js --coverage",
-    "test:frontend": "jest --config=jest.frontend.config.js --coverage"
+    "test:frontend": "jest --config=jest.frontend.config.js --coverage",
+    "generate": "node src/scripts/generateFakeData.js"
   },
   "dependencies": {
-    "@faker-js/faker": "^9.6.0",
+    "@faker-js/faker": "^9.7.0",
     "archiver": "^7.0.1",
     "axios": "^1.8.4",
     "chart.js": "^4.4.8",
@@ -26,7 +27,7 @@
     "module-alias": "^2.2.3",
     "multer": "^1.4.5-lts.2",
     "next": "^15.2.4",
-    "pg": "^8.14.1",
+    "pg": "^8.15.6",
     "postcss": "^8.5.3",
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.0",

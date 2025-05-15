@@ -7,15 +7,16 @@ import {
   deleteCapsuleController,
 } from "../controllers/capsuleController.js";
 import validateCapsule from "../middlewares/validateCapsule.js";
-import pool from "../db/pool.js"
+import pool from "../db/pool.js";
+import { authenticateUser } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.get("/", getCapsulesController);
-router.get("/:id", getCapsuleByIdController);
-router.post("/", validateCapsule, createCapsuleController);
-router.put("/:id", validateCapsule, updateCapsuleController);
-router.delete("/:id", deleteCapsuleController);
+router.get("/", authenticateUser, getCapsulesController);
+router.get("/:id", authenticateUser, getCapsuleByIdController);
+router.post("/", authenticateUser, validateCapsule, createCapsuleController);
+router.put("/:id", authenticateUser, validateCapsule, updateCapsuleController);
+router.delete("/:id", authenticateUser, deleteCapsuleController);
 
 router.get("/stats/top-capsules", async (req, res) => {
   try {

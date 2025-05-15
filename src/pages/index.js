@@ -7,6 +7,9 @@ import { enqueueOfflineData, syncOfflineQueue } from "@/utils/offlineQueue";
 import { io } from "socket.io-client";
 import PieChart from "@/components/UI/PieChart";
 import axios from "axios";
+import LoginForm from "@/components/UI/LoginForm";
+import RegisterForm from "@/components/UI/RegisterForm";
+import MonitoredUsers from "@/components/UI/adminPage";
 
 const socket = io(process.env.NEXT_PUBLIC_API_BASE_URL, {
   transports: ["websocket"],
@@ -25,6 +28,49 @@ export default function Home() {
   const [intervalId, setIntervalId] = useState(null);
   const [isOnline, setIsOnline] = useState(null);
   const [isServerReachable, setIsServerReachable] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [justRegistered, setJustRegistered] = useState(false);
+  const [token, setToken] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const checkIfAdmin = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/admin-data`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (res.ok) {
+        setIsAdmin(true);
+        console.log("✅ User is admin");
+      } else {
+        setIsAdmin(false);
+        console.log("❌ User is NOT admin");
+      }
+    } catch (err) {
+      console.error("Error checking admin role:", err);
+      setIsAdmin(false);
+    }
+  };
+
+  const handleLogin = async (status) => {
+    const storedToken = localStorage.getItem("token");
+    setToken(storedToken);
+    setIsLoggedIn(status);
+  };
+
+  useEffect(() => {
+    if (isLoggedIn && token) {
+      setOffset(0);
+      fetchCapsules(true);
+      checkIfAdmin();
+    }
+  }, [isLoggedIn, token, searchTerm, sortOrder, filterCase]);
 
   useEffect(() => {
     socket.on("capsuleStats", (updatedStats) => {
@@ -57,6 +103,7 @@ export default function Home() {
   };
 
   useEffect(() => {
+    if (!token) return;
     setIsOnline(navigator.onLine);
 
     const handleOnline = () => setIsOnline(true);
@@ -75,13 +122,20 @@ export default function Home() {
       window.removeEventListener("offline", handleOffline);
       clearInterval(interval);
     };
-  }, [isOnline, isServerReachable]);
+  }, [isOnline, isServerReachable, token]);
 
   const checkServerStatus = async () => {
+    if (!token) return;
     try {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules`,
-        { method: "GET", headers: { "X-Health-Check": "true" } }
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "X-Health-Check": "true",
+          },
+        }
       );
       if (!res.ok) throw new Error("Failed to reach server");
       setIsServerReachable(res.ok);
@@ -91,11 +145,6 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    setOffset(0);
-    fetchCapsules(true);
-  }, [searchTerm, sortOrder, filterCase]);
-
   const fetchCapsules = async (reset = false) => {
     try {
       let url = `${
@@ -104,7 +153,13 @@ export default function Home() {
         reset ? 0 : offset
       }&limit=${limit}`;
 
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       if (!response.ok) throw new Error("Failed to fetch capsules");
 
       const { capsules, hasMore } = await response.json();
@@ -179,6 +234,10 @@ export default function Home() {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules/${id}`,
         {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
       );
 
@@ -204,7 +263,10 @@ export default function Home() {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(payload),
         }
       );
@@ -229,6 +291,27 @@ export default function Home() {
     }
   }, [isOnline, isServerReachable]);
 
+  const generateSpamDocs = async () => {
+    if (!token) {
+      console.warn("No token available");
+      return;
+    }
+
+    try {
+      for (let i = 0; i < 1000; i++) {
+        await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules/100274`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      }
+      console.log("✅ Spam documents generated");
+    } catch (err) {
+      console.error("❌ Error generating spam docs:", err);
+    }
+  }; 
+
   return (
     <div className="min-h-screen bg-gray-100 font-courier pb-10">
       {isOnline === false && (
@@ -245,29 +328,47 @@ export default function Home() {
 
       <Header />
 
-      <SearchBar
-        onSearch={setSearchTerm}
-        onSort={handleSortAction}
-        sortOrder={sortOrder}
-        onFilter={handleFilterAction}
-        filterCase={filterCase}
-      />
+      {!isLoggedIn ? (
+        <div>
+          {justRegistered && (
+            <div className="bg-green-200 text-green-800 p-2 rounded mb-4 text-center">
+              ✅ Registration successful! Please log in.
+            </div>
+          )}
+          <LoginForm onLogin={handleLogin} />
+          <RegisterForm onRegister={() => setJustRegistered(true)} />
+        </div>
+      ) : (
+        <div>
+          {isAdmin ? (
+            <MonitoredUsers />
+          ) : (
+            <div>
+              <button
+                onClick={generateSpamDocs}
+                className="mt-10 bg-red-500 text-white px-4 py-2 rounded"
+              >
+                SPAM
+              </button>
+              <SearchBar
+                onSearch={setSearchTerm}
+                onSort={handleSortAction}
+                sortOrder={sortOrder}
+                onFilter={handleFilterAction}
+                filterCase={filterCase}
+              />
+              <CapsulesGrid
+                capsules={timeCapsules}
+                onDelete={handleDeleteAction}
+              />
 
-      {/* <div className="flex justify-center py-5">
-        <PieChart stats={capsuleStats} />
-        <button
-          onClick={handleGenerate}
-          className="bg-blue-500 text-white p-2 rounded"
-        >
-          {isGenerating ? "Stop Generating" : "Generate Random Capsules"}
-        </button>
-      </div> */}
-
-      <CapsulesGrid capsules={timeCapsules} onDelete={handleDeleteAction} />
-
-      <div className="fixed bottom-3 left-3 right-3 flex justify-end">
-        <CreateButton onAdd={handleAddAction} />
-      </div>
+              <div className="fixed bottom-3 left-3 right-3 flex justify-end">
+                <CreateButton onAdd={handleAddAction} />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

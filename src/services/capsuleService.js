@@ -81,7 +81,7 @@ export async function updateCapsuleById(
     `UPDATE time_capsules
        SET capsule_title = $1, capsule_date = $2, capsule_status = $3, capsule_description = $4
        WHERE capsule_id = $5 AND user_id = $6 RETURNING *`,
-    [title, date, status, description, id]
+    [title, date, status, description, id, userId]
   );
 
   if (result.rows.length === 0) {

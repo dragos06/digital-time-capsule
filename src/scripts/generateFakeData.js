@@ -12,7 +12,7 @@ async function insertData() {
     const status = faker.helpers.arrayElement(["Locked", "Unlocked"]);
     const description = faker.lorem.paragraph();
 
-    const capsuleRes = await pool.query(
+    const capsuleRes = await pool.query( 
       `INSERT INTO time_capsules (capsule_title, capsule_date, capsule_status, capsule_description)
         VALUES ($1, $2, $3, $4) RETURNING capsule_id`,
       [title, date.toISOString().split("T")[0], status, description]

@@ -6,12 +6,13 @@ export async function getCapsules({
   status = "All",
   offset = 0,
   limit = 9,
+  userId
 }) {
   offset = parseInt(offset);
   limit = parseInt(limit);
 
-  let query = "SELECT * FROM time_capsules WHERE 1=1";
-  let values = [];
+  let query = "SELECT * FROM time_capsules WHERE user_id = $1";
+  let values = [userId];
 
   if (search) {
     values.push(`%${search.toLowerCase()}%`);
@@ -44,10 +45,10 @@ export async function getCapsules({
   };
 }
 
-export async function getCapsuleById(id) {
+export async function getCapsuleById(id, userId) {
   const result = await pool.query(
-    "SELECT * FROM time_capsules WHERE capsule_id = $1",
-    [id]
+    "SELECT * FROM time_capsules WHERE capsule_id = $1 and user_id = $2",
+    [id, userId]
   );
 
   if (result.rows.length === 0) {
@@ -62,23 +63,24 @@ export async function getCapsuleById(id) {
   };
 }
 
-export async function createCapsule({ title, date, status, description }) {
+export async function createCapsule({ title, date, status, description, userId }) {
   const result = await pool.query(
-    `INSERT INTO time_capsules (capsule_title, capsule_date, capsule_status, capsule_description)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-    [title, date, status, description]
+    `INSERT INTO time_capsules (capsule_title, capsule_date, capsule_status, capsule_description, user_id)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+    [title, date, status, description, userId]
   );
   return result.rows[0];
 }
 
 export async function updateCapsuleById(
   id,
-  { title, date, status, description }
+  { title, date, status, description },
+  userId
 ) {
   const result = await pool.query(
     `UPDATE time_capsules
        SET capsule_title = $1, capsule_date = $2, capsule_status = $3, capsule_description = $4
-       WHERE capsule_id = $5 RETURNING *`,
+       WHERE capsule_id = $5 AND user_id = $6 RETURNING *`,
     [title, date, status, description, id]
   );
 
@@ -94,10 +96,10 @@ export async function updateCapsuleById(
   };
 }
 
-export async function deleteCapsuleById(id) {
+export async function deleteCapsuleById(id, userId) {
   const result = await pool.query(
-    "DELETE FROM time_capsules WHERE capsule_id = $1 RETURNING *",
-    [id]
+    "DELETE FROM time_capsules WHERE capsule_id = $1 and user_id = $2 RETURNING *",
+    [id, userId]
   );
 
   return result.rows.length > 0;

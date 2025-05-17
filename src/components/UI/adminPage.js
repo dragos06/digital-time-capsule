@@ -9,7 +9,7 @@ const MonitoredUsers = () => {
       try {
         const token = localStorage.getItem("token");
         const res = await axios.get(
-          `${process.env.API_URL}/admin/admin-data`,
+          `${process.env.NEXT_PUBLIC_API_URL}/admin/admin-data`,
           {
             method: "GET",
             headers: {

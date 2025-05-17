@@ -13,7 +13,7 @@ const RegisterForm = ({ onRegister }) => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/register`,
+        `${process.env.API_URL}/auth/register`,
         { email, password, role }
       );
       if (response.status === 201) {

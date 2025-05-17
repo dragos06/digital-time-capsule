@@ -10,7 +10,7 @@ import LoginForm from "@/components/UI/LoginForm";
 import RegisterForm from "@/components/UI/RegisterForm";
 import MonitoredUsers from "@/components/UI/adminPage";
 
-const socket = io(process.env.NEXT_PUBLIC_API_BASE_URL, {
+const socket = io(process.env.API_URL, {
   transports: ["websocket"],
 });
 
@@ -35,7 +35,7 @@ export default function Home() {
   const checkIfAdmin = async () => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/admin/admin-data`,
+        `${process.env.API_URL}/admin/admin-data`,
         {
           method: "GET",
           headers: {
@@ -107,7 +107,7 @@ export default function Home() {
     if (!token) return;
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules`,
+        `${process.env.API_URL}/capsules`,
         {
           method: "GET",
           headers: {
@@ -127,7 +127,7 @@ export default function Home() {
   const fetchCapsules = async (reset = false) => {
     try {
       let url = `${
-        process.env.NEXT_PUBLIC_API_BASE_URL
+        process.env.API_URL
       }/capsules?search=${searchTerm}&sort=${sortOrder}&status=${filterCase}&offset=${
         reset ? 0 : offset
       }&limit=${limit}`;
@@ -210,7 +210,7 @@ export default function Home() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules/${id}`,
+        `${process.env.API_URL}/capsules/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -239,7 +239,7 @@ export default function Home() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules`,
+        `${process.env.API_URL}/capsules`,
         {
           method: "POST",
           headers: {
@@ -266,7 +266,7 @@ export default function Home() {
 
   useEffect(() => {
     if (isOnline && isServerReachable) {
-      syncOfflineQueue(process.env.NEXT_PUBLIC_API_BASE_URL);
+      syncOfflineQueue(process.env.API_URL);
     }
   }, [isOnline, isServerReachable]);
 

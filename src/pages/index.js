@@ -5,7 +5,6 @@ import SearchBar from "@/components/UI/SearchBar";
 import CreateButton from "@/components/UI/CreateButton";
 import { enqueueOfflineData, syncOfflineQueue } from "@/utils/offlineQueue";
 import { io } from "socket.io-client";
-import PieChart from "@/components/UI/PieChart";
 import axios from "axios";
 import LoginForm from "@/components/UI/LoginForm";
 import RegisterForm from "@/components/UI/RegisterForm";
@@ -81,26 +80,6 @@ export default function Home() {
       socket.off("capsuleStats");
     };
   }, []);
-
-  const handleGenerate = async () => {
-    if (isGenerating) {
-      clearInterval(intervalId);
-      setIsGenerating(false);
-      setIntervalId(null);
-    } else {
-      const id = setInterval(async () => {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules/generate`,
-          {
-            count: 1,
-          }
-        );
-      }, 2000);
-
-      setIntervalId(id);
-      setIsGenerating(true);
-    }
-  };
 
   useEffect(() => {
     if (!token) return;
@@ -291,27 +270,6 @@ export default function Home() {
     }
   }, [isOnline, isServerReachable]);
 
-  const generateSpamDocs = async () => {
-    if (!token) {
-      console.warn("No token available");
-      return;
-    }
-
-    try {
-      for (let i = 0; i < 1000; i++) {
-        await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/capsules/100274`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      }
-      console.log("✅ Spam documents generated");
-    } catch (err) {
-      console.error("❌ Error generating spam docs:", err);
-    }
-  }; 
-
   return (
     <div className="min-h-screen bg-gray-100 font-courier pb-10">
       {isOnline === false && (
@@ -344,12 +302,6 @@ export default function Home() {
             <MonitoredUsers />
           ) : (
             <div>
-              <button
-                onClick={generateSpamDocs}
-                className="mt-10 bg-red-500 text-white px-4 py-2 rounded"
-              >
-                SPAM
-              </button>
               <SearchBar
                 onSearch={setSearchTerm}
                 onSort={handleSortAction}
